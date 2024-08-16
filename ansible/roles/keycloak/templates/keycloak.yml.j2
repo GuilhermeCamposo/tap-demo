@@ -1,0 +1,25 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  labels:
+    app: sso
+  name: keycloak
+spec:
+  hostname:
+    hostname: keycloak-{{ keycloak_project }}.{{ route_subdomain }}
+  http:
+    tlsSecret: keycloak-tls
+  instances: 1
+  ingress:
+    annotations:
+      route.openshift.io/destination-ca-certificate-secret: keycloak-tls
+      route.openshift.io/termination: reencrypt
+  db:
+    vendor: postgres
+    host: postgresql-db
+    usernameSecret:
+      name: postgresql-db
+      key: username
+    passwordSecret:
+      name: postgresql-db
+      key: password

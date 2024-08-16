@@ -1,0 +1,119 @@
+- name: Evaluate Namespace {{ keycloak_project }}
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Namespace
+    name: '{{ keycloak_project }}'
+    state: present
+
+- name: Evaluate OperatorGroup {{ keycloak_project }}
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: operators.coreos.com/v1
+    kind: OperatorGroup
+    definition:
+      metadata:
+        name: '{{ keycloak_project }}-group'
+        namespace: '{{ keycloak_project }}'
+      spec:
+        targetNamespaces:
+          - '{{ keycloak_project }}'
+
+- name: Evaluate SSO Subscription
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    kind: Subscription
+    api_version: operators.coreos.com/v1alpha1
+    definition:
+      metadata:
+        name: rhbk-operator
+        namespace: '{{ keycloak_project }}'
+      spec:
+        channel: stable-v24
+        installPlanApproval: Automatic
+        name: rhbk-operator
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+
+- name: Wait for Keycloak operator to install
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: '{{ verify_tls }}'
+    api_version: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: keycloaks.k8s.keycloak.org
+  register: crd_sso
+  until: crd_sso.resources | list | length == 1
+  retries: 10
+  delay: 30
+
+- name: Evaluate Postgresdb instance
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ keycloak_project }}'
+    resource_definition: "{{ lookup('file', 'postgresdb.yml') }}"
+
+- name: Waiting for Postgresdb instance to be running
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: '{{ keycloak_project }}'
+    label_selectors:
+      - app = postgresql-db
+      - statefulset.kubernetes.io/pod-name = postgresql-db-0
+    field_selectors:
+      - status.phase=Running
+  register: r_minio_pod
+  retries: 20
+  delay: 10
+  until: r_minio_pod.resources | list | length == 1
+
+- name: Evaluate Keycloak SVC certificate
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ keycloak_project }}'
+    resource_definition: "{{ lookup('file', 'svc-certificate.yml') }}"
+
+- name: Evaluate Keycloak instance
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ keycloak_project }}'
+    resource_definition: "{{ lookup('template', 'keycloak.yml.j2') }}"
+
+- name: Waiting for Keycloak instance to be running
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: '{{ keycloak_project }}'
+    label_selectors:
+      - app = keycloak
+      - statefulset.kubernetes.io/pod-name = keycloak-0
+    field_selectors:
+      - status.phase=Running
+  register: r_minio_pod
+  retries: 20
+  delay: 10
+  until: r_minio_pod.resources | list | length == 1

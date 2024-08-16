@@ -1,0 +1,30 @@
+- name: Install Trusted Application Pipeline
+  hosts: localhost
+  vars:
+    delete_demo: false
+    verify_tls: false
+    insecure_skip_tls_verify: true
+    keycloak_project: keycloak-system
+  tasks:
+    - name: Check Required Parameters
+      ansible.builtin.fail:
+        msg: "This play requires 'server' and 'token' to be defined"
+      when:
+        - (server is not defined) or (token is not defined) or (server is none) or (token is none)
+      ignore_errors: false
+
+    - name: Set domain
+      ansible.builtin.set_fact:
+        domain: "{{ server | regex_replace('https://api.') | regex_replace(':6443') }}"
+
+    - name: Set Subdomain
+      ansible.builtin.set_fact:
+        route_subdomain: "apps.{{ domain }}"
+
+    - name: Include Keycloak
+      ansible.builtin.include_role:
+        name: keycloak
+
+    - name: Include TAS
+      ansible.builtin.include_role:
+        name: tas

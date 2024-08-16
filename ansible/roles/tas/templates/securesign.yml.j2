@@ -1,0 +1,42 @@
+kind: Securesign
+apiVersion: rhtas.redhat.com/v1alpha1
+metadata:
+  annotations:
+    rhtas.redhat.com/metrics: 'true'
+  labels:
+    app.kubernetes.io/instance: securesign-sample
+    app.kubernetes.io/name: securesign-sample
+    app.kubernetes.io/part-of: trusted-artifact-signer
+  name: securesign-sample
+spec:
+  ctlog: null
+  fulcio:
+    certificate:
+      commonName: fulcio.hostname
+      organizationEmail: jdoe@redhat.com
+      organizationName: Red Hat
+    config:
+      OIDCIssuers:
+        - ClientID: trusted-artifact-signer
+          Issuer: 'https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/realms/trusted-artifact-signer'
+          IssuerURL: 'https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/realms/trusted-artifact-signer'
+          Type: email
+    externalAccess:
+      enabled: true
+    monitoring:
+      enabled: true
+  rekor:
+    externalAccess:
+      enabled: true
+    monitoring:
+      enabled: true
+  trillian:
+    database:
+      create: true
+  tuf:
+    externalAccess:
+      enabled: true
+    keys:
+      - name: rekor.pub
+      - name: ctfe.pub
+      - name: fulcio_v1.crt.pem

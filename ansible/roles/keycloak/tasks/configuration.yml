@@ -1,0 +1,53 @@
+- name: Get Keycloak initial secret
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: '{{ verify_tls }}'
+    kind: Secret
+    name: keycloak-initial-admin
+    namespace: '{{ keycloak_project }}'
+    api_version: v1
+  register: r_credential
+  until:
+    - r_credential.resources is defined
+    - r_credential.resources[0] is defined
+  retries: 10
+  delay: 15
+
+- name: Set admin password
+  ansible.builtin.set_fact:
+    rhsso_admin_password: '{{ r_credential.resources[0].data.password | b64decode }}'
+
+- name: Set admin username
+  ansible.builtin.set_fact:
+    rhsso_admin_username: '{{ r_credential.resources[0].data.username | b64decode }}'
+
+- name: Get SSO admin token
+  ansible.builtin.uri:
+    url: 'https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/realms/master/protocol/openid-connect/token'
+    validate_certs: false
+    method: POST
+    body:
+      username: "{{ rhsso_admin_username }}"
+      password: "{{ rhsso_admin_password }}"
+      grant_type: "password"
+      client_id: "admin-cli"
+    body_format: form-urlencoded
+    status_code: 200,201,204
+  register: rhsso_admin_token
+  retries: 120
+  delay: 10
+  until: rhsso_admin_token.status in [200, 201, 204]
+
+- name: Create trusted-artifact-signer Realm
+  ansible.builtin.uri:
+    url: 'https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/admin/realms'
+    method: POST
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ rhsso_admin_token.json.access_token }}"
+    body: "{{ lookup('file', 'realm-export.json') }}"
+    return_content: true
+    validate_certs: '{{ verify_tls }}'
+    status_code: 201
