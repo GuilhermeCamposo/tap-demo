@@ -5,9 +5,9 @@ metadata:
   name: postgresql-db
 type: Opaque
 stringData:
-  username: keycloak
-  password: keycloak
-  database: keycloak 
+  username: profileanalyzer
+  password: profileanalyzer
+  database: profileanalyzer 
 ---
 apiVersion: v1
 kind: Service

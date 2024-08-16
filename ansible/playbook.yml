@@ -5,6 +5,14 @@
     verify_tls: false
     insecure_skip_tls_verify: true
     keycloak_project: keycloak-system
+    tpa_project: trusted-profile-analyzer
+    kafka_project: '{{ tpa_project }}'
+
+    # Minio configuration
+    minio_stateful: false
+    minio_project: '{{ tpa_project }}'
+    minio_key: minio
+    minio_secret: minio123
   tasks:
     - name: Check Required Parameters
       ansible.builtin.fail:
@@ -28,3 +36,7 @@
     - name: Include TAS
       ansible.builtin.include_role:
         name: tas
+
+    - name: Include TPA
+      ansible.builtin.include_role:
+        name: tpa

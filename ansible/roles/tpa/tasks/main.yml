@@ -1,0 +1,62 @@
+- name: Evaluate Namespace {{ tpa_project }}
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Namespace
+    name: '{{ tpa_project }}'
+    state: present
+
+- name: Include Minio
+  ansible.builtin.include_role:
+    name: minio
+
+- name: Include Streams
+  ansible.builtin.include_role:
+    name: streams
+
+- name: Evaluate Postgresdb instance
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ tpa_project }}'
+    resource_definition: "{{ lookup('file', 'postgresdb.yml') }}"
+
+- name: Waiting for Postgresdb instance to be running
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: '{{ tpa_project }}'
+    label_selectors:
+      - app = postgresql-db
+      - statefulset.kubernetes.io/pod-name = postgresql-db-0
+    field_selectors:
+      - status.phase=Running
+  register: r_minio_pod
+  retries: 20
+  delay: 10
+  until: r_minio_pod.resources | list | length == 1
+
+- name: Evaluate Secrets
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ tpa_project }}'
+    resource_definition: "{{ lookup('template', 'secrets.yml.j2') }}"
+
+- name: Create values
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'values-rhtpa.yaml.j2') }}"
+    dest: "/tmp/values-rhtpa.yaml"
+    mode: "0755"
+
+
+# helm install redhat-trusted-profile-analyzer openshift-helm-charts/redhat-trusted-profile-analyzer -n trusted-profile-analyzer --values values-rhtpa.yaml
