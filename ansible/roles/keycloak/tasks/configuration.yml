@@ -47,7 +47,7 @@
     headers:
       Content-Type: "application/json"
       Authorization: "Bearer {{ rhsso_admin_token.json.access_token }}"
-    body: "{{ lookup('file', 'realm-export.json') }}"
+    body: "{{ lookup('template', 'realm-export.json.j2') }}"
     return_content: true
     validate_certs: '{{ verify_tls }}'
     status_code: 201

@@ -5,8 +5,11 @@
     verify_tls: false
     insecure_skip_tls_verify: true
     keycloak_project: keycloak-system
-    tpa_project: trusted-profile-analyzer
     kafka_project: '{{ tpa_project }}'
+
+    # TPA configuration
+    tpa_project: trusted-profile-analyzer
+    tpa_walker_secret: walker_secret
 
     # Minio configuration
     minio_stateful: false

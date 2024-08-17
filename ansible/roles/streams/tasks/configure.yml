@@ -1,0 +1,36 @@
+- name: Evaluate user-secret
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ kafka_project }}'
+    resource_definition: "{{ lookup('file', 'user-secret.yml') }}"
+
+- name: Evaluate user
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ kafka_project }}'
+    resource_definition: "{{ lookup('template', 'user.yml.j2') }}"
+
+- name: Evaluate topics
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ kafka_project }}'
+    resource_definition: "{{ lookup('template', 'topic.yml.j2') }}"
+  loop:
+    - bombastic-failed-default
+    - bombastic-indexed-default
+    - bombastic-stored-default
+    - vexination-failed-default
+    - vexination-indexed-default
+    - vexination-stored-default
+    - v11y-failed-default
+    - v11y-indexed-default
+    - v11y-stored-default

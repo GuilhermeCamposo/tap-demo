@@ -17,8 +17,7 @@
         source: redhat-operators
         sourceNamespace: openshift-marketplace
 
-
-- name: Wait for TAS operator to install
+- name: Wait for TAS CRDs
   kubernetes.core.k8s_info:
     api_key: '{{ token }}'
     host: '{{ server }}'
@@ -28,6 +27,19 @@
     name: securesigns.rhtas.redhat.com
   register: crd_securesigns
   until: crd_securesigns.resources | list | length == 1
+  retries: 10
+  delay: 30
+
+- name: Wait for TAS project
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: '{{ verify_tls }}'
+    api_version: project.openshift.io/v1
+    kind: Project
+    name: trusted-artifact-signer
+  register: tas_project
+  until: tas_project.resources | list | length == 1
   retries: 10
   delay: 30
 
