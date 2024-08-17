@@ -56,7 +56,7 @@
   ansible.builtin.copy:
     content: "{{ lookup('template', 'values-rhtpa.yaml.j2') }}"
     dest: "/tmp/values-rhtpa.yaml"
-    mode: "0755"
+    mode: "0655"
 
 
 # helm install redhat-trusted-profile-analyzer openshift-helm-charts/redhat-trusted-profile-analyzer -n trusted-profile-analyzer --values values-rhtpa.yaml

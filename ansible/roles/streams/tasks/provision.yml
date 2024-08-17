@@ -99,3 +99,21 @@
     - r_kafka.resources[0].status is defined
     - r_kafka.resources[0].status.conditions[0].type == 'Ready'
     - r_kafka.resources[0].status.conditions[0].status == 'True'
+
+- name: Evaluate user-secret
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ kafka_project }}'
+    resource_definition: "{{ lookup('file', 'user-secret.yml') }}"
+
+- name: Evaluate user
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ kafka_project }}'
+    resource_definition: "{{ lookup('template', 'user.yml.j2') }}"

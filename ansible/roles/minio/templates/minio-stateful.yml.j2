@@ -49,7 +49,7 @@ spec:
         - name: MINIO_SECRET_KEY
           value: "{{ minio_secret }}"
         - name: MINIO_REGION_NAME
-          value: "us-west-rack2"
+          value: "{{ minio_region }}"
         ports:
         - containerPort: 9000
         volumeMounts:
@@ -84,4 +84,6 @@ spec:
     kind: Service
     name: minio
     weight: 100
+  tls:
+    termination: edge
   wildcardPolicy: None

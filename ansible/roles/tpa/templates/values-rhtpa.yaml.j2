@@ -1,10 +1,12 @@
 appDomain: {{ domain }}
+authenticator:
+  type: keycloak
 tracing: {}
 ingress:
   className: openshift-default
 
 storage:
- endpoint: minio-{{ tpa_project }}.apps.{{ domain }}:80
+ endpoint: minio-{{ tpa_project }}.apps.{{ domain }}:443
  accessKey:
    valueFrom:
      secretKeyRef:
@@ -20,14 +22,14 @@ eventBus:
   type: kafka
   bootstrapServers: cluster-kafka-bootstrap:9092
   config:
-    securityProtocol: PLAINTEXT
-    # username: “USER_NAME”
-    # password:
-    #   valueFrom:
-    #     secretKeyRef:
-    #       name: kafka-credentials
-    #       key: client_password
-    # mechanism: SCRAM-SHA-512
+    securityProtocol: SASL_PLAINTEXT
+    mechanism: SCRAM-SHA-512
+    username: tester
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: kafka-user-credential
+          key: password
 
 oidc:
   issuerUrl: https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/realms/trusted-artifact-signer
@@ -65,6 +67,7 @@ v11y:
 
 guac:
  database:
+   sslMode: disable
    name:
      valueFrom:
        secretKeyRef:
@@ -92,6 +95,7 @@ guac:
          key: db.password
 
  initDatabase:
+   sslMode: disable
    name:
      valueFrom:
        secretKeyRef:

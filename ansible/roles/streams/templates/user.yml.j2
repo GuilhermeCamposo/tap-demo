@@ -1,0 +1,14 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: tester
+  labels:
+    strimzi.io/cluster: "{{ kafka_cluster_name }}"
+spec:
+  authentication:
+    password:
+      valueFrom:
+        secretKeyRef:
+          key: password
+          name: kafka-user-credential
+    type: scram-sha-512
