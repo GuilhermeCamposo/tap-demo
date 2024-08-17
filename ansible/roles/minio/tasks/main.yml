@@ -32,3 +32,22 @@
   retries: 20
   delay: 10
   until: r_minio_pod.resources | list | length == 1
+
+- name: Log in Minio Instance
+  ansible.builtin.command: "mc config host add tpa-minio https://minio-{{ minio_project }}.{{ route_subdomain }}:443 {{ minio_key }} {{ minio_secret }}"
+  ignore_errors: false
+  register: my_output
+  changed_when: my_output.rc != 0
+
+# Have to fix bucket creation
+# - name: Create Buckets
+#   ansible.builtin.command: |
+#         mc mb tpa-minio/{{ item }}  && \
+#         mc policy download tpa-minio/{{ item }}  \
+#   ignore_errors: false
+#   register: my_output
+#   changed_when: my_output.rc != 0
+#   loop:
+#     - bombastic-default
+#     - vexination-default
+#     - v11y-default
