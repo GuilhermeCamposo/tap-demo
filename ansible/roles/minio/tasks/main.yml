@@ -39,15 +39,19 @@
   register: my_output
   changed_when: my_output.rc != 0
 
-# Have to fix bucket creation
-# - name: Create Buckets
-#   ansible.builtin.command: |
-#         mc mb tpa-minio/{{ item }}  && \
-#         mc policy download tpa-minio/{{ item }}  \
-#   ignore_errors: false
-#   register: my_output
-#   changed_when: my_output.rc != 0
-#   loop:
-#     - bombastic-default
-#     - vexination-default
-#     - v11y-default
+- name: List buckets
+  ansible.builtin.command: "mc ls tpa-minio"
+  ignore_errors: false
+  register: buckets_output
+  changed_when: buckets_output.rc != 0
+
+- name: Create Buckets
+  ansible.builtin.command: mc mb tpa-minio/{{ item }}
+  ignore_errors: false
+  register: my_output
+  changed_when: my_output.rc != 0
+  loop:
+    - bombastic-default
+    - vexination-default
+    - v11y-default
+  when: buckets_output.stdout | length == 0
