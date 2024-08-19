@@ -12,7 +12,7 @@
     tpa_walker_secret: walker_secret
 
     # Minio configuration
-    minio_stateful: false
+    minio_stateful: true
     minio_project: '{{ tpa_project }}'
     minio_key: minio
     minio_secret: minio123
@@ -44,3 +44,15 @@
     - name: Include TPA
       ansible.builtin.include_role:
         name: tpa
+
+    - name: Include ACS
+      ansible.builtin.include_role:
+        name: acs
+
+    - name: Include Tekton
+      ansible.builtin.include_role:
+        name: tekton
+
+    - name: Include ArgoCD
+      ansible.builtin.include_role:
+        name: argocd

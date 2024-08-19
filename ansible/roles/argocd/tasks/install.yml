@@ -1,0 +1,59 @@
+- name: Evaluate Namespace openshift-gitops-operator
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Namespace
+    name: openshift-gitops-operator
+    state: present
+
+- name: Evaluate OperatorGroup openshift-gitops-operator
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: operators.coreos.com/v1
+    kind: OperatorGroup
+    definition:
+      metadata:
+        name: 'openshift-gitops-operator-group'
+        namespace: 'openshift-gitops-operator'
+      spec:
+        upgradeStrategy: Default
+
+- name: Evaluate OpenShift GitOps Subscription
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    kind: Subscription
+    api_version: operators.coreos.com/v1alpha1
+    definition:
+      metadata:
+        name: openshift-gitops-operator
+        namespace: openshift-gitops-operator
+      spec:
+        channel: gitops-1.13
+        installPlanApproval: Automatic
+        name: openshift-gitops-operator
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+
+- name: Wait Gitops Operator
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: openshift-gitops-operator
+    label_selectors:
+      - control-plane = gitops-operator
+    field_selectors:
+      - status.phase=Running
+  register: r_gitops_pod
+  retries: 20
+  delay: 10
+  until: r_gitops_pod.resources | list | length == 1

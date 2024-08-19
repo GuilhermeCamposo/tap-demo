@@ -1,0 +1,145 @@
+- name: Evaluate Namespace rhacs-operator
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Namespace
+    name: rhacs-operator
+    state: present
+
+- name: Evaluate ACS Operator
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: 'rhacs-operator'
+    resource_definition: "{{ lookup('file', 'acs-operator.yml') }}"
+
+- name: Wait ACS Operator
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: 'rhacs-operator'
+    label_selectors:
+      - app = rhacs-operator
+      - control-plane = controller-manager
+    field_selectors:
+      - status.phase=Running
+  register: r_acs_operator_pod
+  retries: 20
+  delay: 10
+  until: r_acs_operator_pod.resources | list | length == 1
+
+- name: Evaluate Namespace stackrox
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Namespace
+    name: stackrox
+    state: present
+
+- name: Evaluate Central Instance
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: 'stackrox'
+    resource_definition: "{{ lookup('file', 'central.yml') }}"
+  retries: 10
+  delay: 10  
+
+- name: Wait ACS Central
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: 'stackrox'
+    label_selectors:
+      - app = central
+      - app.kubernetes.io/part-of = stackrox-central-services
+      - app.kubernetes.io/instance = stackrox-central-services
+    field_selectors:
+      - status.phase=Running
+  register: r_acs_central_pod
+  retries: 20
+  delay: 10
+  until:
+    - r_acs_central_pod.resources[0].status.containerStatuses is defined
+    - r_acs_central_pod.resources[0].status.containerStatuses[0].ready == true
+
+- name: Get collector-tls
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    kind: Secret
+    name: collector-tls
+    namespace: stackrox
+    api_version: v1
+  register: r_collector_tls
+
+- name: Generate init-bundle
+  when: r_collector_tls.resources[0] is undefined
+  block:
+    - name: Get htpasswd
+      kubernetes.core.k8s_info:
+        api_key: '{{ token }}'
+        host: '{{ server }}'
+        validate_certs: false
+        kind: Secret
+        name: central-htpasswd
+        namespace: stackrox
+        api_version: v1
+      register: r_admin_password
+      until:
+        - r_admin_password.resources is defined
+        - r_admin_password.resources[0] is defined
+      retries: 10
+      delay: 15
+    - name: Set admin password
+      ansible.builtin.set_fact:
+        admin_password: '{{ r_admin_password.resources[0].data.password | b64decode }}'
+    - name: Create Init Bundle
+      ansible.builtin.uri:
+        url: https://central-stackrox.apps.{{ domain }}/v1/cluster-init/init-bundles
+        validate_certs: false
+        method: POST
+        url_username: admin
+        url_password: "{{ admin_password }}"
+        force_basic_auth: true
+        body: '{"name":"local-cluster"}'
+        body_format: json
+        status_code: 200,201,204
+      register: r_init_bundle
+      retries: 10
+      delay: 15
+    - name: Set bundle
+      ansible.builtin.set_fact:
+        bundle: '{{ r_init_bundle.json.kubectlBundle | b64decode }}'
+    - name: Evaluate Bundle
+      kubernetes.core.k8s:
+        api_key: '{{ token }}'
+        host: '{{ server }}'
+        validate_certs: false
+        state: present
+        namespace: 'stackrox'
+        resource_definition: "{{ bundle }}"
+
+- name: Evaluate secure-cluster
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: 'stackrox'
+    resource_definition: "{{ lookup('file', 'secure-cluster.yml') }}"

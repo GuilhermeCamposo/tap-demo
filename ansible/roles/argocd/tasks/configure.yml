@@ -1,0 +1,136 @@
+- name: Evaluate cluster-admins group
+  k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: no
+    state: present
+    api_version: user.openshift.io/v1
+    kind: Group
+    definition:
+      metadata:
+        name: cluster-admins
+      users:
+        - opentlc-mgr
+
+- name: Evaluate GitOps Permissions
+  k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: no
+    state: present
+    api_version: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    definition:
+      metadata:
+        name: edit-0
+        namespace: '{{ demo_project }}'
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: edit
+      subjects:
+      - kind: ServiceAccount
+        name: openshift-gitops-argocd-application-controller
+        namespace: openshift-gitops
+
+- name: Evaluate salesforce-secret exists
+  k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: no
+    state: present
+    resource_definition: "{{ lookup('template', 'secret_salesforce.yml.j2') }}"
+
+- name: Evaluate salesforce-webhook-ingestor GitOps Application
+  retries: 5
+  delay: 20
+  register: result
+  until:
+    - result.failed == false
+  k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: no
+    state: present
+    resource_definition: "{{ lookup('template', 'argo_ingestor.yml.j2') }}"
+
+- name: Evaluate asana-secret exists
+  k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: no
+    state: present
+    resource_definition: "{{ lookup('template', 'secret_asana.yml.j2') }}"
+
+- name: Evaluate asana-adapter GitOps Application
+  k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: no
+    state: present
+    resource_definition: "{{ lookup('template', 'argo_asana_adapter.yml.j2') }}"
+
+- name: Get openshift-gitops-cluster Secret
+  k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: no
+    kind: Secret
+    name:  openshift-gitops-cluster
+    namespace: openshift-gitops
+    api_version: v1
+  register: r_gitops_secret
+  until:
+    - r_gitops_secret.resources is defined
+  retries: 10
+  delay: 15
+
+- name: Set argo_password
+  set_fact:
+    argo_password: "{{ r_gitops_secret.resources[0].data['admin.password'] | b64decode }}"
+
+- name: Test ArgoCD API Service
+  uri:
+    url:  https://openshift-gitops-server-openshift-gitops.apps.{{ domain }}
+    validate_certs: false
+    method: GET
+  register: result
+  until: result.status == 200
+  retries: 10
+  delay: 15
+
+- name: Get ArgoCD token
+  uri:
+    url: https://openshift-gitops-server-openshift-gitops.apps.{{ domain }}/api/v1/session
+    validate_certs: false
+    method: POST
+    headers:
+      Content-Type: application/json
+    body: "{{ lookup('template', 'argo_authentication.json.j2') }}"
+    body_format: json
+    status_code: 200,201,204
+  register: r_argo_token
+
+- name: Set argo_token
+  set_fact:
+    argo_token: "{{ r_argo_token.json.token }}"
+
+- name: Sync salesforce-webhook-ingestor
+  uri:
+    url: https://openshift-gitops-server-openshift-gitops.apps.{{ domain }}/api/v1/applications/salesforce-webhook-ingestor/sync
+    validate_certs: false
+    method: POST
+    headers:
+      Authorization: Bearer {{ argo_token }}
+    status_code: 200
+  register: r_argo_token
+
+- name: Sync asana-adapter
+  uri:
+    url: https://openshift-gitops-server-openshift-gitops.apps.{{ domain }}/api/v1/applications/asana-adapter/sync
+    validate_certs: false
+    method: POST
+    headers:
+      Authorization: Bearer {{ argo_token }}
+    status_code: 200
+  register: r_argo_token

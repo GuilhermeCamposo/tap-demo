@@ -52,8 +52,27 @@
     namespace: '{{ tpa_project }}'
     resource_definition: "{{ lookup('template', 'secrets.yml.j2') }}"
 
-- name: Create values
+- name: Create values for Helm deployment
   ansible.builtin.copy:
     content: "{{ lookup('template', 'values-rhtpa.yaml.j2') }}"
     dest: "/tmp/values-rhtpa.yaml"
     mode: "0655"
+
+# - name: Add openshift-helm-charts chart repo
+#   kubernetes.core.helm_repository:
+#     name: openshift-helm-charts
+#     repo_url: "https://charts.openshift.io"
+#   ignore_errors: true
+#   register: ignore_errors_register
+
+# - name: Deploy redhat-trusted-profile-analyzer chart
+#   kubernetes.core.helm:
+#     api_key: '{{ token }}'
+#     host: '{{ server }}'
+#     validate_certs: false
+#     name: redhat-trusted-profile-analyzer
+#     chart_ref: openshift-helm-charts/redhat-trusted-profile-analyzer
+#     chart_version: '0.1.1'
+#     release_namespace: '{{ tpa_project }}'
+#     update_repo_cache: false
+#     values: "{{ lookup('template', 'values-rhtpa.yaml.j2') | from_yaml }}"

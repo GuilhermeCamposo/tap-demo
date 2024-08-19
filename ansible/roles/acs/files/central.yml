@@ -1,0 +1,38 @@
+apiVersion: platform.stackrox.io/v1alpha1
+kind: Central
+metadata:
+  name: stackrox-central-services
+spec:
+  central:
+    db:
+      isEnabled: Default
+      persistence:
+        persistentVolumeClaim:
+          claimName: central-db
+    exposure:
+      loadBalancer:
+        enabled: false
+        port: 443
+      nodePort:
+        enabled: false
+      route:
+        enabled: true
+    notifierSecretsEncryption:
+      enabled: false
+    persistence:
+      persistentVolumeClaim:
+        claimName: stackrox-db
+    telemetry:
+      enabled: true
+  egress:
+    connectivityPolicy: Online
+  monitoring:
+    openshift:
+      enabled: true
+  scanner:
+    analyzer:
+      scaling:
+        autoScaling: Enabled
+        maxReplicas: 5
+        minReplicas: 2
+        replicas: 3

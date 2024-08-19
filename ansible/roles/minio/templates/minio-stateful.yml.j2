@@ -76,7 +76,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: minio
-  namespace: 3scale-project
+  namespace: '{{ minio_project }}'
 spec:
   port:
     targetPort: 9000
