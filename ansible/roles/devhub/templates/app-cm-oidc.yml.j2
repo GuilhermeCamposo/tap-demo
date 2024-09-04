@@ -1,0 +1,52 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ rhdh_cm_name }}
+data:
+  app-config-rhdh.yaml: |
+    app:
+      baseUrl: https://backstage-developer-hub-{{ rhdh_ns }}.{{ route_subdomain }}
+    backend:
+      auth:
+        keys:
+          - secret: "${BACKEND_SECRET}"
+      baseUrl: https://backstage-developer-hub-{{ rhdh_ns }}.{{ route_subdomain }}
+      cors:
+        credentials: true
+        methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        origin: https://backstage-developer-hub-{{ rhdh_ns }}.{{ route_subdomain }}
+    auth:
+      environment: production
+      session:
+        secret: ${SESSION_SECRET}
+      providers:
+        oidc:
+          production:
+            metadataUrl: ${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/.well-known/openid-configuration
+            clientId: ${KEYCLOAK_CLIENT_ID}
+            clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+            prompt: auto
+            signIn:
+              resolvers:
+                - resolver: preferredUsernameMatchingUserEntityName 
+    signInPage: oidc
+    catalog:
+      providers:
+        keycloakOrg:
+          default:
+            baseUrl: '${KEYCLOAK_BASE_URL}'
+            clientId: '${KEYCLOAK_CLIENT_ID}'
+            clientSecret: '${KEYCLOAK_CLIENT_SECRET}'
+            loginRealm: '${KEYCLOAK_LOGIN_REALM}'
+            realm: '${KEYCLOAK_REALM}'
+            schedule:
+              frequency:
+                minutes: 1
+              initialDelay:
+                seconds: 15
+              timeout:
+                minutes: 1

@@ -1,0 +1,22 @@
+- name: Evaluate Namespace {{ pipeline_project }}
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Namespace
+    name: '{{ pipeline_project }}'
+    state: present
+
+# - name: Create Pipeline Resources
+#   kubernetes.core.k8s:
+#     api_key: '{{ token }}'
+#     host: '{{ server }}'
+#     validate_certs: false
+#     state: present
+#     namespace: '{{ pipeline_project }}'
+#     resource_definition: "{{ lookup('template', item ) }}"
+#   loop:
+#     - tasks.yml.j2
+#     - pipeline-build.yml.j2
+#     - pipeline-promote.yml.j2  

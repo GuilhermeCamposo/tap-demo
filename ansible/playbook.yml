@@ -17,6 +17,31 @@
     minio_key: minio
     minio_secret: minio123
     minio_region: eu-west-1
+
+    # Developer Hub Configuration
+    rhdh_project: rhdh
+    rhdh_keycloak_realm: rhdh
+    rhdh_keycloak_client_id: rhdh
+    rhdh_keycloak_client_secret: 9IAuKgbRcEUTU4mjeUUTY25P6IKo0B6L
+
+    # pipeline
+    pipeline_project: demo-tap-pipeline
+    pipeline_app_name:
+    pipeline_app_git_repo:
+    pipeline_app_image:
+    pipeline_source_image:
+    pipeline_preprod_image:
+    pipeline_acs_token_secret:
+    pipeline_git_host: github.com
+    pipeline_git_host_url: https://github.com
+    pipeline_acs_central_url: CHANGE_ME
+    pipeline_sonarqube_url:
+    pipeline_sonarqube_token_secret: object-detection-rest-sonarqube-secret
+    pipeline_common_password_secret:  common-password-secret
+    pipeline_argocd_host: argocd-server-janus-argocd.apps.cluster-jh82x.sandbox1737.opentlc.com
+    pipeline_cyclonedx_host_url: https://cyclonedx-bom-repo-server-cyclonedx.apps.cluster-tr47n.tr47n.sandbox987.opentlc.com
+    pipeline_trustification_secret: trustification-secret
+    pipeline_sigstore_oidc_issuer: https://keycloak-keycloak-system.apps.cluster-v42rv.sandbox795.opentlc.com/auth/realms/sigstore
   tasks:
     - name: Check Required Parameters
       ansible.builtin.fail:
@@ -37,14 +62,6 @@
       ansible.builtin.include_role:
         name: keycloak
 
-    - name: Include TAS
-      ansible.builtin.include_role:
-        name: tas
-
-    - name: Include TPA
-      ansible.builtin.include_role:
-        name: tpa
-
     - name: Include ACS
       ansible.builtin.include_role:
         name: acs
@@ -56,3 +73,11 @@
     - name: Include ArgoCD
       ansible.builtin.include_role:
         name: argocd
+
+    - name: Include TAS
+      ansible.builtin.include_role:
+        name: tas
+
+    - name: Include TPA
+      ansible.builtin.include_role:
+        name: tpa

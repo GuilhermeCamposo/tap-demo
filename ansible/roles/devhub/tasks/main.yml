@@ -1,0 +1,5 @@
+- name: Install Developer Hub
+  ansible.builtin.include_tasks: installation.yml
+
+- name: Configure Developer Hub
+  ansible.builtin.include_tasks: configuration.yml

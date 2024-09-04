@@ -1,2 +1,5 @@
 - name: Install Pipelines
   ansible.builtin.include_tasks: install.yml
+
+- name: Configure Pipelines
+  ansible.builtin.include_tasks: configuration.yml

@@ -1,0 +1,1465 @@
+apiVersion: v1
+items:
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{"task.output.location":"logs","task.results.container":"step-report","task.results.format":"application/json","task.results.type":"roxctl-deployment-check"},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"acs-deploy-check","namespace":"my-quarkus-app-dev"},"spec":{"description":"Policy check a deployment with StackRox/RHACS This tasks allows you to check a deployment against build-time policies and apply enforcement to fail builds. It's a companion to the stackrox-image-scan task, which returns full vulnerability scan results for an image.","params":[{"default":"central-stackrox.apps.cluster-7l8hh.sandbox3007.opentlc.com:443","description":"Secret containing the address:port tuple for StackRox Central)\n(example - rox.stackrox.io:443)\n","name":"rox_central_endpoint","type":"string"},{"default":"my-quarkus-app-stackrox-token","description":"Secret containing the StackRox API token with CI permissions","name":"rox_api_token","type":"string"},{"default":"gitlab-gitlab.apps.cluster-7l8hh.sandbox3007.opentlc.com","name":"git_host","type":"string"},{"default":"development","name":"git_owner","type":"string"},{"default":"my-quarkus-app","description":"The name of the component","name":"component_id","type":"string"},{"default":"common-password-secret","name":"common_password_secret","type":"string"},{"default":"master","name":"git_repository_revision","type":"string"},{"default":"true","name":"verbose","type":"string"},{"default":"false","description":"When set to `\"true\"`, skip verifying the TLS certs of the Central\nendpoint.  Defaults to `\"false\"`.\n","name":"insecure-skip-tls-verify","type":"string"}],"results":[{"description":"Output of `roxctl deployment check`","name":"check_output"}],"steps":[{"env":[{"name":"COMMON_PASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"$(params.common_password_secret)"}}}],"image":"quay.io/redhat-gpte/alpine-git:latest","name":"git-checkout","resources":{},"script":"#!/usr/bin/env sh\n\nset -eu -o pipefail\n\nif [[ \"$(params.verbose)\" == \"true\" ]] ; then\n  set -x\n  echo \"**** Cloning https://root:$COMMON_PASSWORD@$(params.git_host)/$(params.git_owner)/$(params.component_id)-gitops into $(pwd)/repository\"\nfi\n\ngit clone \"https://root:$COMMON_PASSWORD@$(params.git_host)/$(params.git_owner)/$(params.component_id)-gitops\" $(pwd)/repository\ncd repository\ngit checkout \"$(params.git_repository_revision)\"\n","volumeMounts":[{"mountPath":"/workspace/repository","name":"repository"}],"workingDir":"/workspace"},{"image":"alpine/helm:3.11.1","name":"helm-template","resources":{},"script":"#!/usr/bin/env sh\n\nset -eu -o pipefail\n\ncd repository/helm/app\n\nhelm template --dry-run . | awk -vout=out -F\": \" '$0~/^# Source: /{file=out\"/\"$2; print \"Creating \"file; system (\"mkdir -p $(dirname \"file\"); echo -n \"\" \u003e \"file)} $0!~/^#/ \u0026\u0026 $0!=\"---\"{print $0 \u003e\u003e file}'\n","volumeMounts":[{"mountPath":"/workspace/repository","name":"repository"}],"workingDir":"/workspace"},{"env":[{"name":"ROX_API_TOKEN","valueFrom":{"secretKeyRef":{"key":"rox_api_token","name":"$(params.rox_api_token)"}}}],"image":"registry.access.redhat.com/ubi8:8.7-1026","name":"rox-deploy-scan","resources":{},"script":"#!/usr/bin/env bash\n\nset +x\n\ncd /workspace/repository/helm/app/out/quarkus-template/templates\n\ncurl -s -k -L -H \"Authorization: Bearer $ROX_API_TOKEN\" \\\n  \"https://$(params.rox_central_endpoint)/api/cli/download/roxctl-linux\" \\\n  --output ./roxctl  \\\n  \u003e /dev/null\n\nchmod +x ./roxctl  \u003e /dev/null\n\n./roxctl deployment check \\\n $( [ \"$(params.insecure-skip-tls-verify)\" = \"true\" ] \u0026\u0026 \\\n echo -n \"--insecure-skip-tls-verify\") \\\n -e \"$(params.rox_central_endpoint)\" --file \"deployment.yaml\" --output json \u003e roxctl_deployment_check.json\ncat roxctl_deployment_check.json \u003e  $(workspaces.reports.path)/deployment-check\n","volumeMounts":[{"mountPath":"/workspace/repository","name":"repository"}],"workingDir":"/workspace/repository"},{"image":"quay.io/lrangine/crda-maven:11.0","name":"report","script":"#!/bin/sh\ncat $(workspaces.reports.path)/deployment-check\n"}],"volumes":[{"emptyDir":{},"name":"repository"}],"workspaces":[{"name":"reports"}]}}
+      task.output.location: logs
+      task.results.container: step-report
+      task.results.format: application/json
+      task.results.type: roxctl-deployment-check
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: acs-deploy-check
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467359"
+    uid: c2bbdb0d-dbc7-4bcf-9995-0441f979fa49
+  spec:
+    description: Policy check a deployment with StackRox/RHACS This tasks allows you
+      to check a deployment against build-time policies and apply enforcement to fail
+      builds. It's a companion to the stackrox-image-scan task, which returns full
+      vulnerability scan results for an image.
+    params:
+    - default: central-stackrox.apps.cluster-7l8hh.sandbox3007.opentlc.com:443
+      description: |
+        Secret containing the address:port tuple for StackRox Central)
+        (example - rox.stackrox.io:443)
+      name: rox_central_endpoint
+      type: string
+    - default: my-quarkus-app-stackrox-token
+      description: Secret containing the StackRox API token with CI permissions
+      name: rox_api_token
+      type: string
+    - default: gitlab-gitlab.apps.cluster-7l8hh.sandbox3007.opentlc.com
+      name: git_host
+      type: string
+    - default: development
+      name: git_owner
+      type: string
+    - default: my-quarkus-app
+      description: The name of the component
+      name: component_id
+      type: string
+    - default: common-password-secret
+      name: common_password_secret
+      type: string
+    - default: master
+      name: git_repository_revision
+      type: string
+    - default: "true"
+      name: verbose
+      type: string
+    - default: "false"
+      description: |
+        When set to `"true"`, skip verifying the TLS certs of the Central
+        endpoint.  Defaults to `"false"`.
+      name: insecure-skip-tls-verify
+      type: string
+    results:
+    - description: Output of `roxctl deployment check`
+      name: check_output
+      type: string
+    steps:
+    - computeResources: {}
+      env:
+      - name: COMMON_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: password
+            name: $(params.common_password_secret)
+      image: quay.io/redhat-gpte/alpine-git:latest
+      name: git-checkout
+      script: |
+        #!/usr/bin/env sh
+
+        set -eu -o pipefail
+
+        if [[ "$(params.verbose)" == "true" ]] ; then
+          set -x
+          echo "**** Cloning https://root:$COMMON_PASSWORD@$(params.git_host)/$(params.git_owner)/$(params.component_id)-gitops into $(pwd)/repository"
+        fi
+
+        git clone "https://root:$COMMON_PASSWORD@$(params.git_host)/$(params.git_owner)/$(params.component_id)-gitops" $(pwd)/repository
+        cd repository
+        git checkout "$(params.git_repository_revision)"
+      volumeMounts:
+      - mountPath: /workspace/repository
+        name: repository
+      workingDir: /workspace
+    - computeResources: {}
+      image: alpine/helm:3.11.1
+      name: helm-template
+      script: |
+        #!/usr/bin/env sh
+
+        set -eu -o pipefail
+
+        cd repository/helm/app
+
+        helm template --dry-run . | awk -vout=out -F": " '$0~/^# Source: /{file=out"/"$2; print "Creating "file; system ("mkdir -p $(dirname "file"); echo -n "" > "file)} $0!~/^#/ && $0!="---"{print $0 >> file}'
+      volumeMounts:
+      - mountPath: /workspace/repository
+        name: repository
+      workingDir: /workspace
+    - computeResources: {}
+      env:
+      - name: ROX_API_TOKEN
+        valueFrom:
+          secretKeyRef:
+            key: rox_api_token
+            name: $(params.rox_api_token)
+      image: registry.access.redhat.com/ubi8:8.7-1026
+      name: rox-deploy-scan
+      script: |
+        #!/usr/bin/env bash
+
+        set +x
+
+        cd /workspace/repository/helm/app/out/quarkus-template/templates
+
+        curl -s -k -L -H "Authorization: Bearer $ROX_API_TOKEN" \
+          "https://$(params.rox_central_endpoint)/api/cli/download/roxctl-linux" \
+          --output ./roxctl  \
+          > /dev/null
+
+        chmod +x ./roxctl  > /dev/null
+
+        ./roxctl deployment check \
+         $( [ "$(params.insecure-skip-tls-verify)" = "true" ] && \
+         echo -n "--insecure-skip-tls-verify") \
+         -e "$(params.rox_central_endpoint)" --file "deployment.yaml" --output json > roxctl_deployment_check.json
+        cat roxctl_deployment_check.json >  $(workspaces.reports.path)/deployment-check
+      volumeMounts:
+      - mountPath: /workspace/repository
+        name: repository
+      workingDir: /workspace/repository
+    - computeResources: {}
+      image: quay.io/lrangine/crda-maven:11.0
+      name: report
+      script: |
+        #!/bin/sh
+        cat $(workspaces.reports.path)/deployment-check
+    volumes:
+    - emptyDir: {}
+      name: repository
+    workspaces:
+    - name: reports
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{"task.output.location":"logs","task.results.container":"step-report","task.results.format":"application/json","task.results.type":"roxctl-image-check"},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"acs-image-check","namespace":"my-quarkus-app-dev"},"spec":{"description":"Policy check an image with StackRox/RHACS This tasks allows you to check an image against build-time policies and apply enforcement to fail builds. It's a companion to the stackrox-image-scan task, which returns full vulnerability scan results for an image.","params":[{"description":"Secret containing the address:port tuple for StackRox Central)\n(example - rox.stackrox.io:443)\n","name":"rox_central_endpoint","type":"string"},{"description":"Secret containing the StackRox API token with CI permissions","name":"rox_api_token","type":"string"},{"description":"Full name of image to scan (example -- gcr.io/rox/sample:5.0-rc1)\n","name":"image","type":"string"},{"default":"false","description":"When set to `\"true\"`, skip verifying the TLS certs of the Central\nendpoint.  Defaults to `\"false\"`.\n","name":"insecure-skip-tls-verify","type":"string"},{"description":"Digest of the image\n","name":"image_digest","type":"string"}],"results":[{"description":"Output of `roxctl image check`","name":"check_output"}],"steps":[{"env":[{"name":"ROX_API_TOKEN","valueFrom":{"secretKeyRef":{"key":"rox_api_token","name":"$(params.rox_api_token)"}}}],"image":"registry.access.redhat.com/ubi8/ubi-minimal","name":"rox-image-check","script":"#!/usr/bin/env bash\nset +x\nIMAGE=$(params.image)@$(params.image_digest)\ncurl -s -k -L -H \"Authorization: Bearer $ROX_API_TOKEN\" \\\n  \"https://$(params.rox_central_endpoint)/api/cli/download/roxctl-linux\" \\\n  --output ./roxctl  \\\n  \u003e /dev/null\nchmod +x ./roxctl  \u003e /dev/null\n./roxctl image check \\\n  $( [ \"$(params.insecure-skip-tls-verify)\" = \"true\" ] \u0026\u0026 \\\n  echo -n \"--insecure-skip-tls-verify\") \\\n  -e \"$(params.rox_central_endpoint)\" --image \"$IMAGE\" --output json \u003e roxctl_image_check.json\ncat roxctl_image_check.json \u003e  $(workspaces.reports.path)/image-check\n"},{"image":"quay.io/lrangine/crda-maven:11.0","name":"report","script":"#!/bin/sh\ncat $(workspaces.reports.path)/image-check\n"}],"workspaces":[{"name":"reports"}]}}
+      task.output.location: logs
+      task.results.container: step-report
+      task.results.format: application/json
+      task.results.type: roxctl-image-check
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: acs-image-check
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467360"
+    uid: e6981292-01d9-4863-9195-6f89e4840f11
+  spec:
+    description: Policy check an image with StackRox/RHACS This tasks allows you to
+      check an image against build-time policies and apply enforcement to fail builds.
+      It's a companion to the stackrox-image-scan task, which returns full vulnerability
+      scan results for an image.
+    params:
+    - description: |
+        Secret containing the address:port tuple for StackRox Central)
+        (example - rox.stackrox.io:443)
+      name: rox_central_endpoint
+      type: string
+    - description: Secret containing the StackRox API token with CI permissions
+      name: rox_api_token
+      type: string
+    - description: |
+        Full name of image to scan (example -- gcr.io/rox/sample:5.0-rc1)
+      name: image
+      type: string
+    - default: "false"
+      description: |
+        When set to `"true"`, skip verifying the TLS certs of the Central
+        endpoint.  Defaults to `"false"`.
+      name: insecure-skip-tls-verify
+      type: string
+    - description: |
+        Digest of the image
+      name: image_digest
+      type: string
+    results:
+    - description: Output of `roxctl image check`
+      name: check_output
+      type: string
+    steps:
+    - computeResources: {}
+      env:
+      - name: ROX_API_TOKEN
+        valueFrom:
+          secretKeyRef:
+            key: rox_api_token
+            name: $(params.rox_api_token)
+      image: registry.access.redhat.com/ubi8/ubi-minimal
+      name: rox-image-check
+      script: |
+        #!/usr/bin/env bash
+        set +x
+        IMAGE=$(params.image)@$(params.image_digest)
+        curl -s -k -L -H "Authorization: Bearer $ROX_API_TOKEN" \
+          "https://$(params.rox_central_endpoint)/api/cli/download/roxctl-linux" \
+          --output ./roxctl  \
+          > /dev/null
+        chmod +x ./roxctl  > /dev/null
+        ./roxctl image check \
+          $( [ "$(params.insecure-skip-tls-verify)" = "true" ] && \
+          echo -n "--insecure-skip-tls-verify") \
+          -e "$(params.rox_central_endpoint)" --image "$IMAGE" --output json > roxctl_image_check.json
+        cat roxctl_image_check.json >  $(workspaces.reports.path)/image-check
+    - computeResources: {}
+      image: quay.io/lrangine/crda-maven:11.0
+      name: report
+      script: |
+        #!/bin/sh
+        cat $(workspaces.reports.path)/image-check
+    workspaces:
+    - name: reports
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{"task.output.location":"logs","task.results.container":"step-report","task.results.format":"application/json","task.results.key":"SCAN_OUTPUT","task.results.type":"roxctl-image-scan"},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"acs-image-scan","namespace":"my-quarkus-app-dev"},"spec":{"description":"Policy check an image with StackRox/RHACS This tasks allows you to check an image against build-time policies and apply enforcement to fail builds. It's a companion to the stackrox-image-scan task, which returns full vulnerability scan results for an image.","params":[{"description":"Secret containing the address:port tuple for StackRox Central)\n(example - rox.stackrox.io:443)\n","name":"rox_central_endpoint","type":"string"},{"description":"Secret containing the StackRox API token with CI permissions","name":"rox_api_token","type":"string"},{"description":"Full name of image to scan (example -- gcr.io/rox/sample:5.0-rc1)\n","name":"image","type":"string"},{"default":"false","description":"When set to `\"true\"`, skip verifying the TLS certs of the Central\nendpoint.  Defaults to `\"false\"`.\n","name":"insecure-skip-tls-verify","type":"string"},{"description":"Digest of the image\n","name":"image_digest","type":"string"}],"results":[{"description":"Output of `roxctl image check`","name":"SCAN_OUTPUT"}],"steps":[{"env":[{"name":"ROX_API_TOKEN","valueFrom":{"secretKeyRef":{"key":"rox_api_token","name":"$(params.rox_api_token)"}}}],"image":"registry.access.redhat.com/ubi8/ubi-minimal","name":"rox-image-scan","script":"#!/usr/bin/env bash\nset +x\nIMAGE=$(params.image)@$(params.image_digest)\ncurl -s -k -L -H \"Authorization: Bearer $ROX_API_TOKEN\" \\\n  \"https://$(params.rox_central_endpoint)/api/cli/download/roxctl-linux\" \\\n  --output ./roxctl  \\\n  \u003e /dev/null\nchmod +x ./roxctl  \u003e /dev/null\n./roxctl image scan \\\n  $( [ \"$(params.insecure-skip-tls-verify)\" = \"true\" ] \u0026\u0026 \\\n  echo -n \"--insecure-skip-tls-verify\") \\\n  -e \"$(params.rox_central_endpoint)\" --image \"$IMAGE\" --output json \u003e roxctl_output.json\ncat roxctl_output.json \u003e  $(workspaces.reports.path)/image-scan\n"},{"image":"quay.io/lrangine/crda-maven:11.0","name":"export-vulnerabilities","script":"#!/bin/sh\njq -rce \\\n\"{vulnerabilities:{\ncritical: (.result.summary.CRITICAL),\nhigh: (.result.summary.IMPORTANT),\nmedium: (.result.summary.MODERATE),\nlow: (.result.summary.LOW)\n}}\" $(workspaces.reports.path)/image-scan | tee $(results.SCAN_OUTPUT.path)\n"},{"image":"quay.io/lrangine/crda-maven:11.0","name":"report","script":"#!/bin/sh\ncat $(workspaces.reports.path)/image-scan\n"}],"workspaces":[{"name":"reports"}]}}
+      task.output.location: logs
+      task.results.container: step-report
+      task.results.format: application/json
+      task.results.key: SCAN_OUTPUT
+      task.results.type: roxctl-image-scan
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: acs-image-scan
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467358"
+    uid: 8d96660e-fb47-4eb6-b89d-50f812104858
+  spec:
+    description: Policy check an image with StackRox/RHACS This tasks allows you to
+      check an image against build-time policies and apply enforcement to fail builds.
+      It's a companion to the stackrox-image-scan task, which returns full vulnerability
+      scan results for an image.
+    params:
+    - description: |
+        Secret containing the address:port tuple for StackRox Central)
+        (example - rox.stackrox.io:443)
+      name: rox_central_endpoint
+      type: string
+    - description: Secret containing the StackRox API token with CI permissions
+      name: rox_api_token
+      type: string
+    - description: |
+        Full name of image to scan (example -- gcr.io/rox/sample:5.0-rc1)
+      name: image
+      type: string
+    - default: "false"
+      description: |
+        When set to `"true"`, skip verifying the TLS certs of the Central
+        endpoint.  Defaults to `"false"`.
+      name: insecure-skip-tls-verify
+      type: string
+    - description: |
+        Digest of the image
+      name: image_digest
+      type: string
+    results:
+    - description: Output of `roxctl image check`
+      name: SCAN_OUTPUT
+      type: string
+    steps:
+    - computeResources: {}
+      env:
+      - name: ROX_API_TOKEN
+        valueFrom:
+          secretKeyRef:
+            key: rox_api_token
+            name: $(params.rox_api_token)
+      image: registry.access.redhat.com/ubi8/ubi-minimal
+      name: rox-image-scan
+      script: |
+        #!/usr/bin/env bash
+        set +x
+        IMAGE=$(params.image)@$(params.image_digest)
+        curl -s -k -L -H "Authorization: Bearer $ROX_API_TOKEN" \
+          "https://$(params.rox_central_endpoint)/api/cli/download/roxctl-linux" \
+          --output ./roxctl  \
+          > /dev/null
+        chmod +x ./roxctl  > /dev/null
+        ./roxctl image scan \
+          $( [ "$(params.insecure-skip-tls-verify)" = "true" ] && \
+          echo -n "--insecure-skip-tls-verify") \
+          -e "$(params.rox_central_endpoint)" --image "$IMAGE" --output json > roxctl_output.json
+        cat roxctl_output.json >  $(workspaces.reports.path)/image-scan
+    - computeResources: {}
+      image: quay.io/lrangine/crda-maven:11.0
+      name: export-vulnerabilities
+      script: |
+        #!/bin/sh
+        jq -rce \
+        "{vulnerabilities:{
+        critical: (.result.summary.CRITICAL),
+        high: (.result.summary.IMPORTANT),
+        medium: (.result.summary.MODERATE),
+        low: (.result.summary.LOW)
+        }}" $(workspaces.reports.path)/image-scan | tee $(results.SCAN_OUTPUT.path)
+    - computeResources: {}
+      image: quay.io/lrangine/crda-maven:11.0
+      name: report
+      script: |
+        #!/bin/sh
+        cat $(workspaces.reports.path)/image-scan
+    workspaces:
+    - name: reports
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{"tekton.dev/pipelines.minVersion":"0.12.1","tekton.dev/tags":"image-build, appstudio, hacbs"},"labels":{"app.kubernetes.io/version":"0.1","build.appstudio.redhat.com/build_type":"docker","rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"buildah","namespace":"my-quarkus-app-dev"},"spec":{"description":"Buildah task builds source code into a container image and pushes the image into container registry using buildah tool.\nIn addition it generates a SBOM file, injects the SBOM file into final container image and pushes the SBOM file as separate image using cosign tool.\nWhen [Java dependency rebuild](https://redhat-appstudio.github.io/docs.stonesoup.io/Documentation/main/cli/proc_enabled_java_dependencies.html) is enabled it triggers rebuilds of Java artifacts.\nWhen prefetch-dependencies task was activated it is using its artifacts to run build in hermetic environment.","params":[{"description":"Reference of the image buildah will produce.","name":"IMAGE","type":"string"},{"default":"quay.io/redhat-appstudio/buildah:v1.31.0@sha256:34f12c7b72ec2c28f1ded0c494b428df4791c909f1f174dd21b8ed6a57cf5ddb","description":"The location of the buildah builder image.","name":"BUILDER_IMAGE","type":"string"},{"default":"./Dockerfile","description":"Path to the Dockerfile to build.","name":"DOCKERFILE","type":"string"},{"default":".","description":"Path to the directory to use as context.","name":"CONTEXT","type":"string"},{"default":"true","description":"Verify the TLS on the registry endpoint (for push/pull to a non-TLS registry)","name":"TLSVERIFY","type":"string"},{"default":"","description":"unused, should be removed in next task version","name":"DOCKER_AUTH","type":"string"},{"default":"false","description":"Determines if build will be executed without network access.","name":"HERMETIC","type":"string"},{"default":"","description":"In case it is not empty, the prefetched content should be made available to the build.","name":"PREFETCH_INPUT","type":"string"},{"default":"","description":"Delete image tag after specified time. Empty means to keep the image tag. Time values could be something like 1h, 2d, 3w for hours, days, and weeks, respectively.","name":"IMAGE_EXPIRES_AFTER","type":"string"},{"default":"","description":"The image is built from this commit.","name":"COMMIT_SHA","type":"string"}],"results":[{"description":"Digest of the image just built","name":"IMAGE_DIGEST"},{"description":"Image repository where the built image was pushed","name":"IMAGE_URL"},{"description":"Digests of the base images used for build","name":"BASE_IMAGES_DIGESTS"},{"description":"The counting of Java components by publisher in JSON format","name":"SBOM_JAVA_COMPONENTS_COUNT","type":"string"},{"description":"The Java dependencies that came from community sources such as Maven central.","name":"JAVA_COMMUNITY_DEPENDENCIES"}],"stepTemplate":{"env":[{"name":"BUILDAH_FORMAT","value":"oci"},{"name":"STORAGE_DRIVER","value":"vfs"},{"name":"HERMETIC","value":"$(params.HERMETIC)"},{"name":"PREFETCH_INPUT","value":"$(params.PREFETCH_INPUT)"},{"name":"CONTEXT","value":"$(params.CONTEXT)"},{"name":"DOCKERFILE","value":"$(params.DOCKERFILE)"},{"name":"IMAGE","value":"$(params.IMAGE)"},{"name":"TLSVERIFY","value":"$(params.TLSVERIFY)"},{"name":"IMAGE_EXPIRES_AFTER","value":"$(params.IMAGE_EXPIRES_AFTER)"}]},"steps":[{"env":[{"name":"COMMIT_SHA","value":"$(params.COMMIT_SHA)"}],"image":"$(params.BUILDER_IMAGE)","name":"build","resources":{"limits":{"cpu":"2","memory":"4Gi"},"requests":{"cpu":"250m","memory":"512Mi"}},"script":"echo $(ls -a)\nSOURCE_CODE_DIR=./\nif [ -e \"$SOURCE_CODE_DIR/$CONTEXT/$DOCKERFILE\" ]; then\n  dockerfile_path=\"$SOURCE_CODE_DIR/$CONTEXT/$DOCKERFILE\"\nelif [ -e \"$SOURCE_CODE_DIR/$DOCKERFILE\" ]; then\n  dockerfile_path=\"$SOURCE_CODE_DIR/$DOCKERFILE\"\nelif echo \"$DOCKERFILE\" | grep -q \"^https\\?://\"; then\n  echo \"Fetch Dockerfile from $DOCKERFILE\"\n  dockerfile_path=$(mktemp --suffix=-Dockerfile)\n  http_code=$(curl -s -L -w \"%{http_code}\" --output \"$dockerfile_path\" \"$DOCKERFILE\")\n  if [ $http_code != 200 ]; then\n    echo \"No Dockerfile is fetched. Server responds $http_code\"\n    exit 1\n  fi\n  http_code=$(curl -s -L -w \"%{http_code}\" --output \"$dockerfile_path.dockerignore.tmp\" \"$DOCKERFILE.dockerignore\")\n  if [ $http_code = 200 ]; then\n    echo \"Fetched .dockerignore from $DOCKERFILE.dockerignore\"\n    mv \"$dockerfile_path.dockerignore.tmp\" $SOURCE_CODE_DIR/$CONTEXT/.dockerignore\n  fi\nelse\n  echo \"Cannot find Dockerfile $DOCKERFILE\"\n  exit 1\nfi\nif [ -n \"$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR\" ] \u0026\u0026 grep -q '^\\s*RUN \\(./\\)\\?mvn' \"$dockerfile_path\"; then\n  sed -i -e \"s|^\\s*RUN \\(\\(./\\)\\?mvn\\(.*\\)\\)|RUN echo \\\"\u003csettings\u003e\u003cmirrors\u003e\u003cmirror\u003e\u003cid\u003emirror.default\u003c/id\u003e\u003curl\u003ehttp://$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR/v1/cache/default/0/\u003c/url\u003e\u003cmirrorOf\u003e*\u003c/mirrorOf\u003e\u003c/mirror\u003e\u003c/mirrors\u003e\u003c/settings\u003e\\\" \u003e /tmp/settings.yaml; \\1 -s /tmp/settings.yaml|g\" \"$dockerfile_path\"\n  touch /var/lib/containers/java\nfi\n\n# Fixing group permission on /var/lib/containers\nchown root:root /var/lib/containers\n\nsed -i 's/^\\s*short-name-mode\\s*=\\s*.*/short-name-mode = \"disabled\"/' /etc/containers/registries.conf\n\n# Setting new namespace to run buildah - 2^32-2\necho 'root:1:4294967294' | tee -a /etc/subuid \u003e\u003e /etc/subgid\n\nif [ \"${HERMETIC}\" == \"true\" ]; then\n  BUILDAH_ARGS=\"--pull=never\"\n  UNSHARE_ARGS=\"--net\"\n  for image in $(grep -i '^\\s*FROM' \"$dockerfile_path\" | sed 's/--platform=\\S*//' | awk '{print $2}'); do\n    unshare -Ufp --keep-caps -r --map-users 1,1,65536 --map-groups 1,1,65536 -- buildah pull $image\n  done\n  echo \"Build will be executed with network isolation\"\nfi\n\nif [ -n \"${PREFETCH_INPUT}\" ]; then\n  cp -r cachi2 /tmp/\n  chmod -R go+rwX /tmp/cachi2\n  VOLUME_MOUNTS=\"--volume /tmp/cachi2:/cachi2\"\n  sed -i 's|^\\s*run |RUN . /cachi2/cachi2.env \\\u0026\\\u0026 \\\\\\n    |i' \"$dockerfile_path\"\n  echo \"Prefetched content will be made available\"\nfi\n\nLABELS=(\n  \"--label\" \"build-date=$(date -u +'%Y-%m-%dT%H:%M:%S')\"\n  \"--label\" \"architecture=$(uname -m)\"\n  \"--label\" \"vcs-type=git\"\n)\n[ -n \"$COMMIT_SHA\" ] \u0026\u0026 LABELS+=(\"--label\" \"vcs-ref=$COMMIT_SHA\")\n[ -n \"$IMAGE_EXPIRES_AFTER\" ] \u0026\u0026 LABELS+=(\"--label\" \"quay.expires-after=$IMAGE_EXPIRES_AFTER\")\n\nunshare -Uf $UNSHARE_ARGS --keep-caps -r --map-users 1,1,65536 --map-groups 1,1,65536 -- buildah build \\\n  $VOLUME_MOUNTS \\\n  $BUILDAH_ARGS \\\n  ${LABELS[@]} \\\n  --tls-verify=$TLSVERIFY --no-cache \\\n  --ulimit nofile=4096:4096 \\\n  -f \"$dockerfile_path\" -t $IMAGE $SOURCE_CODE_DIR/$CONTEXT\n\ncontainer=$(buildah from --pull-never $IMAGE)\nbuildah mount $container | tee /workspace/container_path\necho $container \u003e /workspace/container_name\n\n# Save the SBOM produced by Cachi2 so it can be merged into the final SBOM later\nif [ -n \"${PREFETCH_INPUT}\" ]; then\n  cp /tmp/cachi2/output/bom.json ./sbom-cachi2.json\nfi\n","securityContext":{"capabilities":{"add":["SETFCAP"]}},"volumeMounts":[{"mountPath":"/var/lib/containers","name":"varlibcontainers"}],"workingDir":"$(workspaces.source.path)"},{"image":"quay.io/redhat-appstudio/syft:v0.94.0","name":"sbom-syft-generate","script":"syft dir:$(workspaces.source.path) --output cyclonedx-json=$(workspaces.source.path)/sbom-source.json\nfind $(cat /workspace/container_path) -xtype l -delete\nsyft dir:$(cat /workspace/container_path) --output cyclonedx-json=$(workspaces.source.path)/sbom-image.json\n","volumeMounts":[{"mountPath":"/var/lib/containers","name":"varlibcontainers"}]},{"image":"quay.io/redhat-appstudio/hacbs-jvm-build-request-processor:1d417e6f1f3e68c6c537333b5759796eddae0afc","name":"analyse-dependencies-java-sbom","script":"if [ -f /var/lib/containers/java ]; then\n  /opt/jboss/container/java/run/run-java.sh analyse-dependencies path $(cat /workspace/container_path) -s $(workspaces.source.path)/sbom-image.json --task-run-name $(context.taskRun.name) --publishers $(results.SBOM_JAVA_COMPONENTS_COUNT.path)\n  sed -i 's/^/ /' $(results.SBOM_JAVA_COMPONENTS_COUNT.path) # Workaround for SRVKP-2875\nelse\n  touch $(results.JAVA_COMMUNITY_DEPENDENCIES.path)\nfi\n","securityContext":{"runAsUser":0},"volumeMounts":[{"mountPath":"/var/lib/containers","name":"varlibcontainers"}]},{"image":"registry.access.redhat.com/ubi9/python-39:1-143.1696863474","name":"merge-syft-sboms","script":"#!/bin/python3\nimport json\n\n# load SBOMs\nwith open(\"./sbom-image.json\") as f:\n  image_sbom = json.load(f)\n\nwith open(\"./sbom-source.json\") as f:\n  source_sbom = json.load(f)\n\n# fetch unique components from available SBOMs\ndef get_identifier(component):\n  return component[\"name\"] + '@' + component.get(\"version\", \"\")\n\nimage_sbom_components = image_sbom.get(\"components\", [])\nexisting_components = [get_identifier(component) for component in image_sbom_components]\n\nsource_sbom_components = source_sbom.get(\"components\", [])\nfor component in source_sbom_components:\n  if get_identifier(component) not in existing_components:\n    image_sbom_components.append(component)\n    existing_components.append(get_identifier(component))\n\nimage_sbom_components.sort(key=lambda c: get_identifier(c))\n\n# write the CycloneDX unified SBOM\nwith open(\"./sbom-cyclonedx.json\", \"w\") as f:\n  json.dump(image_sbom, f, indent=4)\n","securityContext":{"runAsUser":0},"workingDir":"$(workspaces.source.path)"},{"image":"quay.io/redhat-appstudio/cachi2:0.3.0@sha256:46097f22b57e4d48a3fce96d931e08ccfe3a3e6421362d5f9353961279078eef","name":"merge-cachi2-sbom","script":"if [ -n \"${PREFETCH_INPUT}\" ]; then\n  echo \"Merging contents of sbom-cachi2.json into sbom-cyclonedx.json\"\n  /src/utils/merge_syft_sbom.py sbom-cachi2.json sbom-cyclonedx.json \u003e sbom-temp.json\n  mv sbom-temp.json sbom-cyclonedx.json\nelse\n  echo \"Skipping step since no Cachi2 SBOM was produced\"\nfi\n","securityContext":{"runAsUser":0},"workingDir":"$(workspaces.source.path)"},{"image":"registry.access.redhat.com/ubi9/python-39:1-143.1696863474","name":"create-purl-sbom","script":"#!/bin/python3\nimport json\n\nwith open(\"./sbom-cyclonedx.json\") as f:\n  cyclonedx_sbom = json.load(f)\n\npurls = [{\"purl\": component[\"purl\"]} for component in cyclonedx_sbom.get(\"components\", []) if \"purl\" in component]\npurl_content = {\"image_contents\": {\"dependencies\": purls}}\n\nwith open(\"sbom-purl.json\", \"w\") as output_file:\n  json.dump(purl_content, output_file, indent=4)\n","securityContext":{"runAsUser":0},"workingDir":"$(workspaces.source.path)"},{"image":"$(params.BUILDER_IMAGE)","name":"inject-sbom-and-push","resources":{},"script":"# Expose base image digests\nbuildah images --format '{{ .Name }}:{{ .Tag }}@{{ .Digest }}' | grep -v $IMAGE \u003e $(results.BASE_IMAGES_DIGESTS.path)\n\nbase_image_name=$(buildah inspect --format '{{ index .ImageAnnotations \"org.opencontainers.image.base.name\"}}' $IMAGE | cut -f1 -d'@')\nbase_image_digest=$(buildah inspect --format '{{ index .ImageAnnotations \"org.opencontainers.image.base.digest\"}}' $IMAGE)\ncontainer=$(buildah from --pull-never $IMAGE)\nbuildah copy $container sbom-cyclonedx.json sbom-purl.json /root/buildinfo/content_manifests/\nbuildah config -a org.opencontainers.image.base.name=${base_image_name} -a org.opencontainers.image.base.digest=${base_image_digest} $container\nbuildah commit $container $IMAGE\n\nstatus=-1\nmax_run=5\nsleep_sec=10\nfor run in $(seq 1 $max_run); do\n  status=0\n  [ \"$run\" -gt 1 ] \u0026\u0026 sleep $sleep_sec\n  echo \"Pushing sbom image to registry\"\n  buildah push \\\n    --tls-verify=$TLSVERIFY \\\n    --digestfile $(workspaces.source.path)/image-digest $IMAGE \\\n    docker://$IMAGE \u0026\u0026 break || status=$?\ndone\nif [ \"$status\" -ne 0 ]; then\n    echo \"Failed to push sbom image to registry after ${max_run} tries\"\n    exit 1\nfi\n\ncat \"$(workspaces.source.path)\"/image-digest | tee $(results.IMAGE_DIGEST.path)\necho -n \"$IMAGE\" | tee $(results.IMAGE_URL.path)\n","securityContext":{"capabilities":{"add":["SETFCAP"]},"runAsUser":0},"volumeMounts":[{"mountPath":"/var/lib/containers","name":"varlibcontainers"}],"workingDir":"$(workspaces.source.path)"},{"args":["attach","sbom","--sbom","sbom-cyclonedx.json","--type","cyclonedx","$(params.IMAGE)"],"image":"quay.io/redhat-appstudio/cosign:v2.1.1","name":"upload-sbom","workingDir":"$(workspaces.source.path)"}],"volumes":[{"emptyDir":{},"name":"varlibcontainers"}],"workspaces":[{"description":"Workspace containing the source code to build.","name":"source"}]}}
+      tekton.dev/pipelines.minVersion: 0.12.1
+      tekton.dev/tags: image-build, appstudio, hacbs
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/version: "0.1"
+      build.appstudio.redhat.com/build_type: docker
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: buildah
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467363"
+    uid: b03a46a9-7fa9-4c97-8556-18b20f7bf8a9
+  spec:
+    description: |-
+      Buildah task builds source code into a container image and pushes the image into container registry using buildah tool.
+      In addition it generates a SBOM file, injects the SBOM file into final container image and pushes the SBOM file as separate image using cosign tool.
+      When [Java dependency rebuild](https://redhat-appstudio.github.io/docs.stonesoup.io/Documentation/main/cli/proc_enabled_java_dependencies.html) is enabled it triggers rebuilds of Java artifacts.
+      When prefetch-dependencies task was activated it is using its artifacts to run build in hermetic environment.
+    params:
+    - description: Reference of the image buildah will produce.
+      name: IMAGE
+      type: string
+    - default: quay.io/redhat-appstudio/buildah:v1.31.0@sha256:34f12c7b72ec2c28f1ded0c494b428df4791c909f1f174dd21b8ed6a57cf5ddb
+      description: The location of the buildah builder image.
+      name: BUILDER_IMAGE
+      type: string
+    - default: ./Dockerfile
+      description: Path to the Dockerfile to build.
+      name: DOCKERFILE
+      type: string
+    - default: .
+      description: Path to the directory to use as context.
+      name: CONTEXT
+      type: string
+    - default: "true"
+      description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+        registry)
+      name: TLSVERIFY
+      type: string
+    - default: ""
+      description: unused, should be removed in next task version
+      name: DOCKER_AUTH
+      type: string
+    - default: "false"
+      description: Determines if build will be executed without network access.
+      name: HERMETIC
+      type: string
+    - default: ""
+      description: In case it is not empty, the prefetched content should be made
+        available to the build.
+      name: PREFETCH_INPUT
+      type: string
+    - default: ""
+      description: Delete image tag after specified time. Empty means to keep the
+        image tag. Time values could be something like 1h, 2d, 3w for hours, days,
+        and weeks, respectively.
+      name: IMAGE_EXPIRES_AFTER
+      type: string
+    - default: ""
+      description: The image is built from this commit.
+      name: COMMIT_SHA
+      type: string
+    results:
+    - description: Digest of the image just built
+      name: IMAGE_DIGEST
+      type: string
+    - description: Image repository where the built image was pushed
+      name: IMAGE_URL
+      type: string
+    - description: Digests of the base images used for build
+      name: BASE_IMAGES_DIGESTS
+      type: string
+    - description: The counting of Java components by publisher in JSON format
+      name: SBOM_JAVA_COMPONENTS_COUNT
+      type: string
+    - description: The Java dependencies that came from community sources such as
+        Maven central.
+      name: JAVA_COMMUNITY_DEPENDENCIES
+      type: string
+    stepTemplate:
+      computeResources: {}
+      env:
+      - name: BUILDAH_FORMAT
+        value: oci
+      - name: STORAGE_DRIVER
+        value: vfs
+      - name: HERMETIC
+        value: $(params.HERMETIC)
+      - name: PREFETCH_INPUT
+        value: $(params.PREFETCH_INPUT)
+      - name: CONTEXT
+        value: $(params.CONTEXT)
+      - name: DOCKERFILE
+        value: $(params.DOCKERFILE)
+      - name: IMAGE
+        value: $(params.IMAGE)
+      - name: TLSVERIFY
+        value: $(params.TLSVERIFY)
+      - name: IMAGE_EXPIRES_AFTER
+        value: $(params.IMAGE_EXPIRES_AFTER)
+    steps:
+    - computeResources:
+        limits:
+          cpu: "2"
+          memory: 4Gi
+        requests:
+          cpu: 250m
+          memory: 512Mi
+      env:
+      - name: COMMIT_SHA
+        value: $(params.COMMIT_SHA)
+      image: $(params.BUILDER_IMAGE)
+      name: build
+      script: |
+        echo $(ls -a)
+        SOURCE_CODE_DIR=./
+        if [ -e "$SOURCE_CODE_DIR/$CONTEXT/$DOCKERFILE" ]; then
+          dockerfile_path="$SOURCE_CODE_DIR/$CONTEXT/$DOCKERFILE"
+        elif [ -e "$SOURCE_CODE_DIR/$DOCKERFILE" ]; then
+          dockerfile_path="$SOURCE_CODE_DIR/$DOCKERFILE"
+        elif echo "$DOCKERFILE" | grep -q "^https\?://"; then
+          echo "Fetch Dockerfile from $DOCKERFILE"
+          dockerfile_path=$(mktemp --suffix=-Dockerfile)
+          http_code=$(curl -s -L -w "%{http_code}" --output "$dockerfile_path" "$DOCKERFILE")
+          if [ $http_code != 200 ]; then
+            echo "No Dockerfile is fetched. Server responds $http_code"
+            exit 1
+          fi
+          http_code=$(curl -s -L -w "%{http_code}" --output "$dockerfile_path.dockerignore.tmp" "$DOCKERFILE.dockerignore")
+          if [ $http_code = 200 ]; then
+            echo "Fetched .dockerignore from $DOCKERFILE.dockerignore"
+            mv "$dockerfile_path.dockerignore.tmp" $SOURCE_CODE_DIR/$CONTEXT/.dockerignore
+          fi
+        else
+          echo "Cannot find Dockerfile $DOCKERFILE"
+          exit 1
+        fi
+        if [ -n "$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR" ] && grep -q '^\s*RUN \(./\)\?mvn' "$dockerfile_path"; then
+          sed -i -e "s|^\s*RUN \(\(./\)\?mvn\(.*\)\)|RUN echo \"<settings><mirrors><mirror><id>mirror.default</id><url>http://$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR/v1/cache/default/0/</url><mirrorOf>*</mirrorOf></mirror></mirrors></settings>\" > /tmp/settings.yaml; \1 -s /tmp/settings.yaml|g" "$dockerfile_path"
+          touch /var/lib/containers/java
+        fi
+
+        # Fixing group permission on /var/lib/containers
+        chown root:root /var/lib/containers
+
+        sed -i 's/^\s*short-name-mode\s*=\s*.*/short-name-mode = "disabled"/' /etc/containers/registries.conf
+
+        # Setting new namespace to run buildah - 2^32-2
+        echo 'root:1:4294967294' | tee -a /etc/subuid >> /etc/subgid
+
+        if [ "${HERMETIC}" == "true" ]; then
+          BUILDAH_ARGS="--pull=never"
+          UNSHARE_ARGS="--net"
+          for image in $(grep -i '^\s*FROM' "$dockerfile_path" | sed 's/--platform=\S*//' | awk '{print $2}'); do
+            unshare -Ufp --keep-caps -r --map-users 1,1,65536 --map-groups 1,1,65536 -- buildah pull $image
+          done
+          echo "Build will be executed with network isolation"
+        fi
+
+        if [ -n "${PREFETCH_INPUT}" ]; then
+          cp -r cachi2 /tmp/
+          chmod -R go+rwX /tmp/cachi2
+          VOLUME_MOUNTS="--volume /tmp/cachi2:/cachi2"
+          sed -i 's|^\s*run |RUN . /cachi2/cachi2.env \&\& \\\n    |i' "$dockerfile_path"
+          echo "Prefetched content will be made available"
+        fi
+
+        LABELS=(
+          "--label" "build-date=$(date -u +'%Y-%m-%dT%H:%M:%S')"
+          "--label" "architecture=$(uname -m)"
+          "--label" "vcs-type=git"
+        )
+        [ -n "$COMMIT_SHA" ] && LABELS+=("--label" "vcs-ref=$COMMIT_SHA")
+        [ -n "$IMAGE_EXPIRES_AFTER" ] && LABELS+=("--label" "quay.expires-after=$IMAGE_EXPIRES_AFTER")
+
+        unshare -Uf $UNSHARE_ARGS --keep-caps -r --map-users 1,1,65536 --map-groups 1,1,65536 -- buildah build \
+          $VOLUME_MOUNTS \
+          $BUILDAH_ARGS \
+          ${LABELS[@]} \
+          --tls-verify=$TLSVERIFY --no-cache \
+          --ulimit nofile=4096:4096 \
+          -f "$dockerfile_path" -t $IMAGE $SOURCE_CODE_DIR/$CONTEXT
+
+        container=$(buildah from --pull-never $IMAGE)
+        buildah mount $container | tee /workspace/container_path
+        echo $container > /workspace/container_name
+
+        # Save the SBOM produced by Cachi2 so it can be merged into the final SBOM later
+        if [ -n "${PREFETCH_INPUT}" ]; then
+          cp /tmp/cachi2/output/bom.json ./sbom-cachi2.json
+        fi
+      securityContext:
+        capabilities:
+          add:
+          - SETFCAP
+      volumeMounts:
+      - mountPath: /var/lib/containers
+        name: varlibcontainers
+      workingDir: $(workspaces.source.path)
+    - computeResources: {}
+      image: quay.io/redhat-appstudio/syft:v0.94.0
+      name: sbom-syft-generate
+      script: |
+        syft dir:$(workspaces.source.path) --output cyclonedx-json=$(workspaces.source.path)/sbom-source.json
+        find $(cat /workspace/container_path) -xtype l -delete
+        syft dir:$(cat /workspace/container_path) --output cyclonedx-json=$(workspaces.source.path)/sbom-image.json
+      volumeMounts:
+      - mountPath: /var/lib/containers
+        name: varlibcontainers
+    - computeResources: {}
+      image: quay.io/redhat-appstudio/hacbs-jvm-build-request-processor:1d417e6f1f3e68c6c537333b5759796eddae0afc
+      name: analyse-dependencies-java-sbom
+      script: |
+        if [ -f /var/lib/containers/java ]; then
+          /opt/jboss/container/java/run/run-java.sh analyse-dependencies path $(cat /workspace/container_path) -s $(workspaces.source.path)/sbom-image.json --task-run-name $(context.taskRun.name) --publishers $(results.SBOM_JAVA_COMPONENTS_COUNT.path)
+          sed -i 's/^/ /' $(results.SBOM_JAVA_COMPONENTS_COUNT.path) # Workaround for SRVKP-2875
+        else
+          touch $(results.JAVA_COMMUNITY_DEPENDENCIES.path)
+        fi
+      securityContext:
+        runAsUser: 0
+      volumeMounts:
+      - mountPath: /var/lib/containers
+        name: varlibcontainers
+    - computeResources: {}
+      image: registry.access.redhat.com/ubi9/python-39:1-143.1696863474
+      name: merge-syft-sboms
+      script: |
+        #!/bin/python3
+        import json
+
+        # load SBOMs
+        with open("./sbom-image.json") as f:
+          image_sbom = json.load(f)
+
+        with open("./sbom-source.json") as f:
+          source_sbom = json.load(f)
+
+        # fetch unique components from available SBOMs
+        def get_identifier(component):
+          return component["name"] + '@' + component.get("version", "")
+
+        image_sbom_components = image_sbom.get("components", [])
+        existing_components = [get_identifier(component) for component in image_sbom_components]
+
+        source_sbom_components = source_sbom.get("components", [])
+        for component in source_sbom_components:
+          if get_identifier(component) not in existing_components:
+            image_sbom_components.append(component)
+            existing_components.append(get_identifier(component))
+
+        image_sbom_components.sort(key=lambda c: get_identifier(c))
+
+        # write the CycloneDX unified SBOM
+        with open("./sbom-cyclonedx.json", "w") as f:
+          json.dump(image_sbom, f, indent=4)
+      securityContext:
+        runAsUser: 0
+      workingDir: $(workspaces.source.path)
+    - computeResources: {}
+      image: quay.io/redhat-appstudio/cachi2:0.3.0@sha256:46097f22b57e4d48a3fce96d931e08ccfe3a3e6421362d5f9353961279078eef
+      name: merge-cachi2-sbom
+      script: |
+        if [ -n "${PREFETCH_INPUT}" ]; then
+          echo "Merging contents of sbom-cachi2.json into sbom-cyclonedx.json"
+          /src/utils/merge_syft_sbom.py sbom-cachi2.json sbom-cyclonedx.json > sbom-temp.json
+          mv sbom-temp.json sbom-cyclonedx.json
+        else
+          echo "Skipping step since no Cachi2 SBOM was produced"
+        fi
+      securityContext:
+        runAsUser: 0
+      workingDir: $(workspaces.source.path)
+    - computeResources: {}
+      image: registry.access.redhat.com/ubi9/python-39:1-143.1696863474
+      name: create-purl-sbom
+      script: |
+        #!/bin/python3
+        import json
+
+        with open("./sbom-cyclonedx.json") as f:
+          cyclonedx_sbom = json.load(f)
+
+        purls = [{"purl": component["purl"]} for component in cyclonedx_sbom.get("components", []) if "purl" in component]
+        purl_content = {"image_contents": {"dependencies": purls}}
+
+        with open("sbom-purl.json", "w") as output_file:
+          json.dump(purl_content, output_file, indent=4)
+      securityContext:
+        runAsUser: 0
+      workingDir: $(workspaces.source.path)
+    - computeResources: {}
+      image: $(params.BUILDER_IMAGE)
+      name: inject-sbom-and-push
+      script: |
+        # Expose base image digests
+        buildah images --format '{{ .Name }}:{{ .Tag }}@{{ .Digest }}' | grep -v $IMAGE > $(results.BASE_IMAGES_DIGESTS.path)
+
+        base_image_name=$(buildah inspect --format '{{ index .ImageAnnotations "org.opencontainers.image.base.name"}}' $IMAGE | cut -f1 -d'@')
+        base_image_digest=$(buildah inspect --format '{{ index .ImageAnnotations "org.opencontainers.image.base.digest"}}' $IMAGE)
+        container=$(buildah from --pull-never $IMAGE)
+        buildah copy $container sbom-cyclonedx.json sbom-purl.json /root/buildinfo/content_manifests/
+        buildah config -a org.opencontainers.image.base.name=${base_image_name} -a org.opencontainers.image.base.digest=${base_image_digest} $container
+        buildah commit $container $IMAGE
+
+        status=-1
+        max_run=5
+        sleep_sec=10
+        for run in $(seq 1 $max_run); do
+          status=0
+          [ "$run" -gt 1 ] && sleep $sleep_sec
+          echo "Pushing sbom image to registry"
+          buildah push \
+            --tls-verify=$TLSVERIFY \
+            --digestfile $(workspaces.source.path)/image-digest $IMAGE \
+            docker://$IMAGE && break || status=$?
+        done
+        if [ "$status" -ne 0 ]; then
+            echo "Failed to push sbom image to registry after ${max_run} tries"
+            exit 1
+        fi
+
+        cat "$(workspaces.source.path)"/image-digest | tee $(results.IMAGE_DIGEST.path)
+        echo -n "$IMAGE" | tee $(results.IMAGE_URL.path)
+      securityContext:
+        capabilities:
+          add:
+          - SETFCAP
+        runAsUser: 0
+      volumeMounts:
+      - mountPath: /var/lib/containers
+        name: varlibcontainers
+      workingDir: $(workspaces.source.path)
+    - args:
+      - attach
+      - sbom
+      - --sbom
+      - sbom-cyclonedx.json
+      - --type
+      - cyclonedx
+      - $(params.IMAGE)
+      computeResources: {}
+      image: quay.io/redhat-appstudio/cosign:v2.1.1
+      name: upload-sbom
+      workingDir: $(workspaces.source.path)
+    volumes:
+    - emptyDir: {}
+      name: varlibcontainers
+    workspaces:
+    - description: Workspace containing the source code to build.
+      name: source
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"rekor-signed-provenance","namespace":"my-quarkus-app-dev"},"spec":{"params":[{"name":"imageDigest","type":"string"},{"default":"https://rekor.sigstore.dev","name":"rekorUrl","type":"string"}],"steps":[{"image":"quay.io/redhat-gpte/rekor-cli","name":"rekor-uuid-from-sha","script":"UUID=$(rekor-cli search --sha $(params.imageDigest) --rekor_server $(params.rekorUrl))\nrekor-cli get --uuid $UUID --format json --rekor_server $(params.rekorUrl) \u003e /workspace/rekor.get\n"},{"image":"quay.io/redhat-gpte/jq","name":"pretty-print-attestation","script":"set -x\ncat /workspace/rekor.get | jq -r .\n"}]}}
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: rekor-signed-provenance
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467452"
+    uid: 90ace3d7-29b6-4438-86be-f07e57aa1ac0
+  spec:
+    params:
+    - name: imageDigest
+      type: string
+    - default: https://rekor.sigstore.dev
+      name: rekorUrl
+      type: string
+    steps:
+    - computeResources: {}
+      image: quay.io/redhat-gpte/rekor-cli
+      name: rekor-uuid-from-sha
+      script: |
+        UUID=$(rekor-cli search --sha $(params.imageDigest) --rekor_server $(params.rekorUrl))
+        rekor-cli get --uuid $UUID --format json --rekor_server $(params.rekorUrl) > /workspace/rekor.get
+    - computeResources: {}
+      image: quay.io/redhat-gpte/jq
+      name: pretty-print-attestation
+      script: |
+        set -x
+        cat /workspace/rekor.get | jq -r .
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"resync","namespace":"my-quarkus-app-dev"},"spec":{"params":[{"description":"The component id","name":"COMPONENT_ID","type":"string"}],"steps":[{"args":["oc delete pod -n $(params.COMPONENT_ID)-dev -l app.kubernetes.io/instance=$(params.COMPONENT_ID)-dev"],"command":["/bin/bash","-c"],"image":"quay.io/openshift/origin-cli:latest","name":"resync","resources":{}}]}}
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: resync
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467453"
+    uid: cf4b4177-02c5-437e-8bcf-c21da281fc40
+  spec:
+    params:
+    - description: The component id
+      name: COMPONENT_ID
+      type: string
+    steps:
+    - args:
+      - oc delete pod -n $(params.COMPONENT_ID)-dev -l app.kubernetes.io/instance=$(params.COMPONENT_ID)-dev
+      command:
+      - /bin/bash
+      - -c
+      computeResources: {}
+      image: quay.io/openshift/origin-cli:latest
+      name: resync
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"scan-code","namespace":"my-quarkus-app-dev"},"spec":{"params":[{"default":"docker.io/sonarsource/sonar-scanner-cli:10.0","name":"scanImage","type":"string"},{"default":"https://sonarqube-sonarqube.apps.cluster-tpn6s.sandbox2653.opentlc.com/","name":"sonarqubeHostUrl","type":"string"},{"default":"object-detection-rest","name":"sonarqubeProjectKey","type":"string"},{"default":"object-detection-rest-sonarqube-secret","name":"sonarqubeProjectSecret","type":"string"},{"default":"true","name":"verbose","type":"string"}],"steps":[{"env":[{"name":"SONAR_TOKEN_WEB_UI","valueFrom":{"secretKeyRef":{"key":"token","name":"$(params.sonarqubeProjectSecret)"}}}],"image":"$(params.scanImage)","name":"scan-code","script":"set -x\necho $(ls -a)\nsonar-scanner -X -Dsonar.projectKey=$(params.sonarqubeProjectKey) -Dsonar.sources=./ -Dsonar.host.url=$(params.sonarqubeHostUrl) -Dsonar.login=$SONAR_TOKEN_WEB_UI -Dsonar.java.binaries=target/classes\n","workingDir":"/workspace/repository"}],"workspaces":[{"name":"repository"}]}}
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: scan-code
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467454"
+    uid: 55c3d407-9d64-4360-839c-9308c12c3da6
+  spec:
+    params:
+    - default: docker.io/sonarsource/sonar-scanner-cli:10.0
+      name: scanImage
+      type: string
+    - default: https://sonarqube-sonarqube.apps.cluster-tpn6s.sandbox2653.opentlc.com/
+      name: sonarqubeHostUrl
+      type: string
+    - default: object-detection-rest
+      name: sonarqubeProjectKey
+      type: string
+    - default: object-detection-rest-sonarqube-secret
+      name: sonarqubeProjectSecret
+      type: string
+    - default: "true"
+      name: verbose
+      type: string
+    steps:
+    - computeResources: {}
+      env:
+      - name: SONAR_TOKEN_WEB_UI
+        valueFrom:
+          secretKeyRef:
+            key: token
+            name: $(params.sonarqubeProjectSecret)
+      image: $(params.scanImage)
+      name: scan-code
+      script: |
+        set -x
+        echo $(ls -a)
+        sonar-scanner -X -Dsonar.projectKey=$(params.sonarqubeProjectKey) -Dsonar.sources=./ -Dsonar.host.url=$(params.sonarqubeHostUrl) -Dsonar.login=$SONAR_TOKEN_WEB_UI -Dsonar.java.binaries=target/classes
+      workingDir: /workspace/repository
+    workspaces:
+    - name: repository
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"update-deployment","namespace":"my-quarkus-app-dev"},"spec":{"params":[{"default":"gitlab-gitlab.apps.cluster-jh82x.sandbox1737.opentlc.com","description":"The hostname of the git instance","name":"git-host","type":"string"},{"default":"development","description":"The owner of the repo","name":"git-owner","type":"string"},{"default":"my-quarkus-app","description":"The name of the component","name":"component-id","type":"string"},{"default":"common-password-secret","description":"Common password used in demo","name":"common-password-secret","type":"string"},{"description":"Namespace","name":"namespace","type":"string"},{"description":"Newest image tag","name":"image-tag","type":"string"},{"default":"argocd-server-janus-argocd.apps.cluster-jh82x.sandbox1737.opentlc.com","description":"ArgoCD host","name":"argocd-host","type":"string"}],"steps":[{"env":[{"name":"COMMON_PASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"$(params.common-password-secret)"}}}],"image":"alpine/git:latest","name":"patch","script":"git config --global user.email \"root@opentlc.com\"\n\ngit config --global user.name \"Administrator\"\n\ngit clone https://root:$COMMON_PASSWORD@$(params.git-host)/$(params.git-owner)/$(params.component-id)-gitops\n\ncd $(params.component-id)-gitops\n\nNAMESPACE=$(params.namespace)\n\nENVIRON=$(echo $NAMESPACE | grep -i '\\-preprod' \u003e /dev/null \u0026\u0026 echo preprod || echo prod)\n\nFILE=$(params.component-id)-argocd-app-$ENVIRON.yaml\n\nsed -i \"22s/.*/        value: '$(params.image-tag)'/\" argocd/$FILE\n\ngit add .\n\ngit commit -m \"Commit image tag $(params.image-tag) to $ENVIRON\"\n\ngit push\n"},{"env":[{"name":"COMMON_PASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"$(params.common-password-secret)"}}}],"image":"quay.io/redhat-gpte/argocd-cli:v2.8.4","name":"sync","onError":"continue","script":"argocd login --grpc-web --username admin  --password $COMMON_PASSWORD $(params.argocd-host)\n\nargocd app terminate-op $(params.component-id)-bootstrap \u003e /dev/null 2\u003e\u00261 || echo ''\nargocd app sync --async $(params.component-id)-bootstrap\n"}]}}
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: update-deployment
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467463"
+    uid: b2f1bcee-77e0-4162-84fe-46f8010809ad
+  spec:
+    params:
+    - default: gitlab-gitlab.apps.cluster-jh82x.sandbox1737.opentlc.com
+      description: The hostname of the git instance
+      name: git-host
+      type: string
+    - default: development
+      description: The owner of the repo
+      name: git-owner
+      type: string
+    - default: my-quarkus-app
+      description: The name of the component
+      name: component-id
+      type: string
+    - default: common-password-secret
+      description: Common password used in demo
+      name: common-password-secret
+      type: string
+    - description: Namespace
+      name: namespace
+      type: string
+    - description: Newest image tag
+      name: image-tag
+      type: string
+    - default: argocd-server-janus-argocd.apps.cluster-jh82x.sandbox1737.opentlc.com
+      description: ArgoCD host
+      name: argocd-host
+      type: string
+    steps:
+    - computeResources: {}
+      env:
+      - name: COMMON_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: password
+            name: $(params.common-password-secret)
+      image: alpine/git:latest
+      name: patch
+      script: |
+        git config --global user.email "root@opentlc.com"
+
+        git config --global user.name "Administrator"
+
+        git clone https://root:$COMMON_PASSWORD@$(params.git-host)/$(params.git-owner)/$(params.component-id)-gitops
+
+        cd $(params.component-id)-gitops
+
+        NAMESPACE=$(params.namespace)
+
+        ENVIRON=$(echo $NAMESPACE | grep -i '\-preprod' > /dev/null && echo preprod || echo prod)
+
+        FILE=$(params.component-id)-argocd-app-$ENVIRON.yaml
+
+        sed -i "22s/.*/        value: '$(params.image-tag)'/" argocd/$FILE
+
+        git add .
+
+        git commit -m "Commit image tag $(params.image-tag) to $ENVIRON"
+
+        git push
+    - computeResources: {}
+      env:
+      - name: COMMON_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: password
+            name: $(params.common-password-secret)
+      image: quay.io/redhat-gpte/argocd-cli:v2.8.4
+      name: sync
+      onError: continue
+      script: |
+        argocd login --grpc-web --username admin  --password $COMMON_PASSWORD $(params.argocd-host)
+
+        argocd app terminate-op $(params.component-id)-bootstrap > /dev/null 2>&1 || echo ''
+        argocd app sync --async $(params.component-id)-bootstrap
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{"task.output.location":"results","task.results.format":"application/text","task.results.key":"LINK_TO_SBOM","task.results.type":"external-link"},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"upload-sbom-to-cyclonedx-repo","namespace":"my-quarkus-app-dev"},"spec":{"params":[{"default":"https://cyclonedx-bom-repo-server-cyclonedx.apps.cluster-tr47n.tr47n.sandbox987.opentlc.com/","name":"cyclonedxHostUrl","type":"string"},{"default":null,"name":"image","type":"string"}],"results":[{"description":"The url location of the generate SBOM","name":"LINK_TO_SBOM"}],"steps":[{"args":["download","sbom","$(params.image)","--output-file","bom.json"],"image":"quay.io/redhat-appstudio/cosign:v2.1.1","name":"get-sbom","workingDir":"/workspace/repository"},{"image":"ubi9/ubi","name":"export-sbom","resources":{"requests":{"memory":"1Gi"}},"script":"set +x\ncurl -X POST $(params.cyclonedxHostUrl)/v1/bom -H \"Content-Type: application/vnd.cyclonedx+json; version=1.4\" -H \"Accept: */*\" -d @bom.json -D /tmp/header.txt \u003e /dev/null\nLOCATION=$(cat /tmp/header.txt | grep location: | awk '{print $2}' | sed 's|http:|https:|g')\necho $LOCATION\nprintf \"%s\" \"$LOCATION\" \u003e \"$(results.LINK_TO_SBOM.path)\"\n","workingDir":"/workspace/repository"}],"workspaces":[{"name":"repository"}]}}
+      task.output.location: results
+      task.results.format: application/text
+      task.results.key: LINK_TO_SBOM
+      task.results.type: external-link
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: upload-sbom-to-cyclonedx-repo
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467462"
+    uid: 840af36d-6f9c-4e1f-b827-6cae4273357d
+  spec:
+    params:
+    - default: https://cyclonedx-bom-repo-server-cyclonedx.apps.cluster-tr47n.tr47n.sandbox987.opentlc.com/
+      name: cyclonedxHostUrl
+      type: string
+    - name: image
+      type: string
+    results:
+    - description: The url location of the generate SBOM
+      name: LINK_TO_SBOM
+      type: string
+    steps:
+    - args:
+      - download
+      - sbom
+      - $(params.image)
+      - --output-file
+      - bom.json
+      computeResources: {}
+      image: quay.io/redhat-appstudio/cosign:v2.1.1
+      name: get-sbom
+      workingDir: /workspace/repository
+    - computeResources:
+        requests:
+          memory: 1Gi
+      image: ubi9/ubi
+      name: export-sbom
+      script: |
+        set +x
+        curl -X POST $(params.cyclonedxHostUrl)/v1/bom -H "Content-Type: application/vnd.cyclonedx+json; version=1.4" -H "Accept: */*" -d @bom.json -D /tmp/header.txt > /dev/null
+        LOCATION=$(cat /tmp/header.txt | grep location: | awk '{print $2}' | sed 's|http:|https:|g')
+        echo $LOCATION
+        printf "%s" "$LOCATION" > "$(results.LINK_TO_SBOM.path)"
+      workingDir: /workspace/repository
+    workspaces:
+    - name: repository
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1","kind":"Task","metadata":{"annotations":{"tekton.dev/tags":"sbom, trustification"},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"upload-sbom-to-tpa","namespace":"my-quarkus-app-dev"},"spec":{"description":"Upload an SBOM file to [Trustification] using the [BOMbastic] API.\n\n[Trustification]: https://github.com/trustification/trustification\n[BOMbastic]: https://github.com/trustification/trustification/tree/main/bombastic\n\n## Configuration\n\nThis task requires some configuration and authentication secrets. By default, the task takes\nthem from a secret called `trustification-secret` that exists in the same namespace where the\ntask runs. You can override the secret name via the `TRUSTIFICATION_SECRET_NAME` param.\n\n### trustification-secret\n\nRequired keys:\n- bombastic_api_url: URL of the BOMbastic api host (e.g. https://sbom.trustification.dev)\n- oidc_issuer_url: URL of the OIDC token issuer (e.g. https://sso.trustification.dev/realms/chicken)\n- oidc_client_id: OIDC client ID\n- oidc_client_secret: OIDC client secret\n\nOptional keys:\n- supported_cyclonedx_version: If the SBOM uses a higher CycloneDX version,\n    `syft convert` to the supported version before uploading.","params":[{"name":"COMPONENT_ID","type":"string"},{"default":".","description":"Directory containing SBOM files. The task will search for CycloneDX JSON SBOMs recursively in this directory and upload them all to Trustification. The path is relative to the 'sboms' workspace.","name":"SBOMS_DIR","type":"string"},{"default":"3","description":"Maximum number of retries for transient HTTP(S) errors","name":"HTTP_RETRIES","type":"string"},{"default":"trustification-secret","description":"Name of the Secret containing auth and configuration","name":"TRUSTIFICATION_SECRET_NAME","type":"string"},{"default":"true","description":"Should the task fail if the Secret does not contain the required keys? (Set \"true\" to fail, \"false\" to skip uploading and exit with success).","name":"FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED","type":"string"}],"stepTemplate":{"env":[{"name":"SBOMS_DIR","value":"$(workspaces.sboms.path)/$(params.SBOMS_DIR)"},{"name":"HTTP_RETRIES","value":"$(params.HTTP_RETRIES)"},{"name":"TRUSTIFICATION_SECRET_NAME","value":"$(params.TRUSTIFICATION_SECRET_NAME)"},{"name":"TRUSTIFICATION_SECRET_PATH","value":"/run/secrets/trustification"},{"name":"FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED","value":"$(params.FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED)"},{"name":"WORKDIR","value":"/tekton/home"}],"volumeMounts":[{"mountPath":"/run/secrets/trustification","name":"trustification-secret"}]},"steps":[{"image":"quay.io/redhat-appstudio/appstudio-utils:5bd7d6cb0b17f9f2eab043a8ad16ba3d90551bc2@sha256:8c7fcf86af40c71aeb58e4279625c8308af5144e2f6b8e28b0ec7e795260e5f7","name":"gather-sboms","script":"#!/usr/bin/env bash\nset -o errexit -o nounset -o pipefail\n\nversion_lesser_equal() {\n  local first\n  first=\"$(printf \"%s\\n%s\" \"$1\" \"$2\" | sort --version-sort | head -n 1)\"\n  [ \"$1\" = \"$first\" ]\n}\n\nif [[ -f \"$TRUSTIFICATION_SECRET_PATH/supported_cyclonedx_version\" ]]; then\n  supported_version=\"$(cat \"$TRUSTIFICATION_SECRET_PATH/supported_cyclonedx_version\")\"\nelse\n  echo \"The '$TRUSTIFICATION_SECRET_NAME' secret does not set supported_cyclonedx_version, will not check SBOM versions\"\n  supported_version=\"\"\nfi\n\necho \"Looking for CycloneDX SBOMs in $SBOMS_DIR\"\n\nfind \"$SBOMS_DIR\" -type f | while read -r filepath; do\n  file_relpath=$(realpath \"$filepath\" --relative-base=\"$SBOMS_DIR\")\n\n  if [[ $filepath != *\"cyclonedx\"* ]]; then\n    continue\n  fi\n\n  if ! jq empty \"$filepath\" 2\u003e/dev/null; then\n    echo \"$file_relpath: not JSON\"\n    continue\n  fi\n\n  if ! jq -e '.bomFormat == \"CycloneDX\"' \"$filepath\" \u003e/dev/null; then\n    echo \"$file_relpath: not a CycloneDX SBOM\"\n    continue\n  fi\n\n  echo \"Found CycloneDX SBOM: $file_relpath\"\n  \n  # Your SBOM ultimately appears in the TPA UI with a name listed in this .json file. By\n  # default, Syft creates that name based on the filepath of the SBOM. If you want your SBOM to\n  # appear in the TPA UI with a more meaningful name, you must manually change it in the .json file\n  # you just downloaded. Specifically, you must replace the name in the .metadata.component\n  # object. You can optionally add a version field here, if you wish.\n  # This is why we've added the sed command to give the sbom a meaningful name\n  sed -i 's|\"/var/lib/containers/storage/vfs/dir/[^\"]*|\"$(params.COMPONENT_ID)|' $filepath\n  \n  # The 'id' of each SBOM is checksum of the original content, before (possibly)\n  # downgrading the CycloneDX version. The conversion always updates some metadata\n  # (timestamp, UUID), changing the checksum. To avoid duplication, use the original\n  # checksum.\n  sbom_id=\"sha256:$(sha256sum \"$filepath\" | cut -d ' ' -f 1)\"\n\n  # Symlink the discovered SBOMS to ${WORKDIR}/${sbom_id}.json so that subsequent steps\n  # don't have to look for them again.\n  sbom_path=\"$WORKDIR/$sbom_id.json\"\n  ln -s \"$(realpath \"$filepath\")\" \"$sbom_path\"\n\n  if [[ -n \"$supported_version\" ]]; then\n    sbom_version=\"$(jq -r \".specVersion\" \"$sbom_path\")\"\n\n    if version_lesser_equal \"$sbom_version\" \"$supported_version\"; then\n      echo \"SBOM version ($sbom_version) is supported (\u003c= $supported_version), will not convert\"\n    else\n      echo \"SBOM version ($sbom_version) is not supported, will convert to $supported_version\"\n      printf \"%s\" \"$supported_version\" \u003e \"${sbom_path}.convert_to_version\"\n    fi\n  fi\ndone\n\necho \"Found $(find \"$WORKDIR\" -name \"*.json\" | wc -l) CycloneDX SBOMs\"\n"},{"image":"registry.redhat.io/rh-syft-tech-preview/syft-rhel9:1.0.1@sha256:27c268d678103a27b6964c2cd5169040941b7304d0078f9727789ffb8ffba370","name":"convert-sboms-if-needed","script":"#!/usr/bin/env bash\nset -o errexit -o nounset -o pipefail\n\n# Return zero matches when a glob doesn't match rather than returning the glob itself\nshopt -s nullglob\n\nfor sbom_path in \"$WORKDIR\"/*.json; do\n  conversion_attr=\"${sbom_path}.convert_to_version\"\n\n  if [[ -f \"$conversion_attr\" ]]; then\n    cdx_version=\"$(cat \"$conversion_attr\")\"\n    original_sbom_path=\"$(realpath \"$sbom_path\")\"\n    original_sbom_relpath=\"$(realpath \"$sbom_path\" --relative-base=\"$SBOMS_DIR\")\"\n\n    echo \"Converting $original_sbom_relpath to CycloneDX $cdx_version\"\n    syft convert \"$original_sbom_path\" -o \"cyclonedx-json@${cdx_version}=${sbom_path}.supported_version\"\n  else\n    # Just duplicate the symlink, the original SBOM already has a supported CDX version\n    cp --no-dereference \"$sbom_path\" \"${sbom_path}.supported_version\"\n  fi\ndone\n"},{"image":"quay.io/redhat-appstudio/appstudio-utils:5bd7d6cb0b17f9f2eab043a8ad16ba3d90551bc2@sha256:8c7fcf86af40c71aeb58e4279625c8308af5144e2f6b8e28b0ec7e795260e5f7","name":"upload-sboms","script":"#!/usr/bin/env bash\nset -o errexit -o nounset -o pipefail\n\nshopt -s nullglob\nsboms_to_upload=(\"$WORKDIR\"/*.json)\n\nif [[ \"${#sboms_to_upload[@]}\" -eq 0 ]]; then\n  echo \"No SBOMs to upload\"\n  exit 0\nfi\n\nread_required_secret_key() {\n  local key=\"$1\"\n  if [[ -f \"$TRUSTIFICATION_SECRET_PATH/$key\" ]]; then\n    cat \"$TRUSTIFICATION_SECRET_PATH/$key\"\n  else\n    echo \"Missing configuration: $key\" \u003e\u00262\n    echo \"Does the '$TRUSTIFICATION_SECRET_NAME' secret exist in your namespace and contain the required keys?\" \u003e\u00262\n    echo \"Refer to the description of this Task for details.\" \u003e\u00262\n\n    if [[ \"$FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED\" == \"false\" ]]; then\n      echo \"WARNING: FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED=false; exiting with success\" \u003e\u00262\n      exit 0\n    else\n      exit 1\n    fi\n  fi\n}\n\nbombastic_api_url=\"$(read_required_secret_key bombastic_api_url)\"\noidc_issuer_url=\"$(read_required_secret_key oidc_issuer_url)\"\noidc_client_id=\"$(read_required_secret_key oidc_client_id)\"\noidc_client_secret=\"$(read_required_secret_key oidc_client_secret)\"\n\ncurl_opts=(--silent --show-error --fail-with-body --retry \"$HTTP_RETRIES\")\n\n# https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig\nopenid_configuration_url=\"${oidc_issuer_url%/}/.well-known/openid-configuration\"\necho \"Getting OIDC issuer configuration from $openid_configuration_url\"\n# https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata\ntoken_endpoint=\"$(curl \"${curl_opts[@]}\" \"$openid_configuration_url\" | jq -r .token_endpoint)\"\n\nfor sbom_path in \"${sboms_to_upload[@]}\"; do\n  original_sbom_relpath=\"$(realpath \"$sbom_path\" --relative-base=\"$SBOMS_DIR\")\"\n  echo\n  echo \"--- Processing $original_sbom_relpath ---\"\n\n  echo \"Getting OIDC token from $token_endpoint\"\n  token_response=\"$(\n    curl \"${curl_opts[@]}\" \\\n      -u \"${oidc_client_id}:${oidc_client_secret}\" \\\n      -d \"grant_type=client_credentials\" \\\n      \"$token_endpoint\"\n  )\"\n  # https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1\n  access_token=\"$(jq -r .access_token \u003c\u003c\u003c \"$token_response\")\"\n  token_type=\"$(jq -r .token_type \u003c\u003c\u003c \"$token_response\")\"\n  expires_in=\"$(jq -r \".expires_in // empty\" \u003c\u003c\u003c \"$token_response\")\"\n\n  retry_max_time=0  # no limit\n  if [[ -n \"$expires_in\" ]]; then\n    retry_max_time=\"$expires_in\"\n  fi\n\n  # This sbom_id is the one created in the gather-sboms step - sha256:${checksum}\n  sbom_id=\"$(basename -s .json \"$sbom_path\")\"\n  supported_version_of_sbom=\"${sbom_path}.supported_version\"\n\n  echo \"Uploading SBOM to $bombastic_api_url (with id=$sbom_id)\"\n  # https://docs.trustification.dev/trustification/user/bombastic.html#publishing-an-sbom-doc\n  curl \"${curl_opts[@]}\" \\\n    --retry-max-time \"$retry_max_time\" \\\n    -H \"authorization: $token_type $access_token\" \\\n    -H \"transfer-encoding: chunked\" \\\n    -H \"content-type: application/json\" \\\n    --data \"@$supported_version_of_sbom\" \\\n    \"$bombastic_api_url/api/v1/sbom?id=$sbom_id\"\ndone\n"}],"volumes":[{"name":"trustification-secret","secret":{"optional":true,"secretName":"$(params.TRUSTIFICATION_SECRET_NAME)"}}],"workspaces":[{"description":"Directory containing the SBOMs to upload","name":"sboms"}]}}
+      tekton.dev/tags: sbom, trustification
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: upload-sbom-to-tpa
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467465"
+    uid: 14e98a67-a862-4fc9-9e68-76eb865689aa
+  spec:
+    description: |-
+      Upload an SBOM file to [Trustification] using the [BOMbastic] API.
+
+      [Trustification]: https://github.com/trustification/trustification
+      [BOMbastic]: https://github.com/trustification/trustification/tree/main/bombastic
+
+      ## Configuration
+
+      This task requires some configuration and authentication secrets. By default, the task takes
+      them from a secret called `trustification-secret` that exists in the same namespace where the
+      task runs. You can override the secret name via the `TRUSTIFICATION_SECRET_NAME` param.
+
+      ### trustification-secret
+
+      Required keys:
+      - bombastic_api_url: URL of the BOMbastic api host (e.g. https://sbom.trustification.dev)
+      - oidc_issuer_url: URL of the OIDC token issuer (e.g. https://sso.trustification.dev/realms/chicken)
+      - oidc_client_id: OIDC client ID
+      - oidc_client_secret: OIDC client secret
+
+      Optional keys:
+      - supported_cyclonedx_version: If the SBOM uses a higher CycloneDX version,
+          `syft convert` to the supported version before uploading.
+    params:
+    - name: COMPONENT_ID
+      type: string
+    - default: .
+      description: Directory containing SBOM files. The task will search for CycloneDX
+        JSON SBOMs recursively in this directory and upload them all to Trustification.
+        The path is relative to the 'sboms' workspace.
+      name: SBOMS_DIR
+      type: string
+    - default: "3"
+      description: Maximum number of retries for transient HTTP(S) errors
+      name: HTTP_RETRIES
+      type: string
+    - default: trustification-secret
+      description: Name of the Secret containing auth and configuration
+      name: TRUSTIFICATION_SECRET_NAME
+      type: string
+    - default: "true"
+      description: Should the task fail if the Secret does not contain the required
+        keys? (Set "true" to fail, "false" to skip uploading and exit with success).
+      name: FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED
+      type: string
+    stepTemplate:
+      computeResources: {}
+      env:
+      - name: SBOMS_DIR
+        value: $(workspaces.sboms.path)/$(params.SBOMS_DIR)
+      - name: HTTP_RETRIES
+        value: $(params.HTTP_RETRIES)
+      - name: TRUSTIFICATION_SECRET_NAME
+        value: $(params.TRUSTIFICATION_SECRET_NAME)
+      - name: TRUSTIFICATION_SECRET_PATH
+        value: /run/secrets/trustification
+      - name: FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED
+        value: $(params.FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED)
+      - name: WORKDIR
+        value: /tekton/home
+      volumeMounts:
+      - mountPath: /run/secrets/trustification
+        name: trustification-secret
+    steps:
+    - computeResources: {}
+      image: quay.io/redhat-appstudio/appstudio-utils:5bd7d6cb0b17f9f2eab043a8ad16ba3d90551bc2@sha256:8c7fcf86af40c71aeb58e4279625c8308af5144e2f6b8e28b0ec7e795260e5f7
+      name: gather-sboms
+      script: "#!/usr/bin/env bash\nset -o errexit -o nounset -o pipefail\n\nversion_lesser_equal()
+        {\n  local first\n  first=\"$(printf \"%s\\n%s\" \"$1\" \"$2\" | sort --version-sort
+        | head -n 1)\"\n  [ \"$1\" = \"$first\" ]\n}\n\nif [[ -f \"$TRUSTIFICATION_SECRET_PATH/supported_cyclonedx_version\"
+        ]]; then\n  supported_version=\"$(cat \"$TRUSTIFICATION_SECRET_PATH/supported_cyclonedx_version\")\"\nelse\n
+        \ echo \"The '$TRUSTIFICATION_SECRET_NAME' secret does not set supported_cyclonedx_version,
+        will not check SBOM versions\"\n  supported_version=\"\"\nfi\n\necho \"Looking
+        for CycloneDX SBOMs in $SBOMS_DIR\"\n\nfind \"$SBOMS_DIR\" -type f | while
+        read -r filepath; do\n  file_relpath=$(realpath \"$filepath\" --relative-base=\"$SBOMS_DIR\")\n\n
+        \ if [[ $filepath != *\"cyclonedx\"* ]]; then\n    continue\n  fi\n\n  if
+        ! jq empty \"$filepath\" 2>/dev/null; then\n    echo \"$file_relpath: not
+        JSON\"\n    continue\n  fi\n\n  if ! jq -e '.bomFormat == \"CycloneDX\"' \"$filepath\"
+        >/dev/null; then\n    echo \"$file_relpath: not a CycloneDX SBOM\"\n    continue\n
+        \ fi\n\n  echo \"Found CycloneDX SBOM: $file_relpath\"\n  \n  # Your SBOM
+        ultimately appears in the TPA UI with a name listed in this .json file. By\n
+        \ # default, Syft creates that name based on the filepath of the SBOM. If
+        you want your SBOM to\n  # appear in the TPA UI with a more meaningful name,
+        you must manually change it in the .json file\n  # you just downloaded. Specifically,
+        you must replace the name in the .metadata.component\n  # object. You can
+        optionally add a version field here, if you wish.\n  # This is why we've added
+        the sed command to give the sbom a meaningful name\n  sed -i 's|\"/var/lib/containers/storage/vfs/dir/[^\"]*|\"$(params.COMPONENT_ID)|'
+        $filepath\n  \n  # The 'id' of each SBOM is checksum of the original content,
+        before (possibly)\n  # downgrading the CycloneDX version. The conversion always
+        updates some metadata\n  # (timestamp, UUID), changing the checksum. To avoid
+        duplication, use the original\n  # checksum.\n  sbom_id=\"sha256:$(sha256sum
+        \"$filepath\" | cut -d ' ' -f 1)\"\n\n  # Symlink the discovered SBOMS to
+        ${WORKDIR}/${sbom_id}.json so that subsequent steps\n  # don't have to look
+        for them again.\n  sbom_path=\"$WORKDIR/$sbom_id.json\"\n  ln -s \"$(realpath
+        \"$filepath\")\" \"$sbom_path\"\n\n  if [[ -n \"$supported_version\" ]]; then\n
+        \   sbom_version=\"$(jq -r \".specVersion\" \"$sbom_path\")\"\n\n    if version_lesser_equal
+        \"$sbom_version\" \"$supported_version\"; then\n      echo \"SBOM version
+        ($sbom_version) is supported (<= $supported_version), will not convert\"\n
+        \   else\n      echo \"SBOM version ($sbom_version) is not supported, will
+        convert to $supported_version\"\n      printf \"%s\" \"$supported_version\"
+        > \"${sbom_path}.convert_to_version\"\n    fi\n  fi\ndone\n\necho \"Found
+        $(find \"$WORKDIR\" -name \"*.json\" | wc -l) CycloneDX SBOMs\"\n"
+    - computeResources: {}
+      image: registry.redhat.io/rh-syft-tech-preview/syft-rhel9:1.0.1@sha256:27c268d678103a27b6964c2cd5169040941b7304d0078f9727789ffb8ffba370
+      name: convert-sboms-if-needed
+      script: |
+        #!/usr/bin/env bash
+        set -o errexit -o nounset -o pipefail
+
+        # Return zero matches when a glob doesn't match rather than returning the glob itself
+        shopt -s nullglob
+
+        for sbom_path in "$WORKDIR"/*.json; do
+          conversion_attr="${sbom_path}.convert_to_version"
+
+          if [[ -f "$conversion_attr" ]]; then
+            cdx_version="$(cat "$conversion_attr")"
+            original_sbom_path="$(realpath "$sbom_path")"
+            original_sbom_relpath="$(realpath "$sbom_path" --relative-base="$SBOMS_DIR")"
+
+            echo "Converting $original_sbom_relpath to CycloneDX $cdx_version"
+            syft convert "$original_sbom_path" -o "cyclonedx-json@${cdx_version}=${sbom_path}.supported_version"
+          else
+            # Just duplicate the symlink, the original SBOM already has a supported CDX version
+            cp --no-dereference "$sbom_path" "${sbom_path}.supported_version"
+          fi
+        done
+    - computeResources: {}
+      image: quay.io/redhat-appstudio/appstudio-utils:5bd7d6cb0b17f9f2eab043a8ad16ba3d90551bc2@sha256:8c7fcf86af40c71aeb58e4279625c8308af5144e2f6b8e28b0ec7e795260e5f7
+      name: upload-sboms
+      script: |
+        #!/usr/bin/env bash
+        set -o errexit -o nounset -o pipefail
+
+        shopt -s nullglob
+        sboms_to_upload=("$WORKDIR"/*.json)
+
+        if [[ "${#sboms_to_upload[@]}" -eq 0 ]]; then
+          echo "No SBOMs to upload"
+          exit 0
+        fi
+
+        read_required_secret_key() {
+          local key="$1"
+          if [[ -f "$TRUSTIFICATION_SECRET_PATH/$key" ]]; then
+            cat "$TRUSTIFICATION_SECRET_PATH/$key"
+          else
+            echo "Missing configuration: $key" >&2
+            echo "Does the '$TRUSTIFICATION_SECRET_NAME' secret exist in your namespace and contain the required keys?" >&2
+            echo "Refer to the description of this Task for details." >&2
+
+            if [[ "$FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED" == "false" ]]; then
+              echo "WARNING: FAIL_IF_TRUSTIFICATION_NOT_CONFIGURED=false; exiting with success" >&2
+              exit 0
+            else
+              exit 1
+            fi
+          fi
+        }
+
+        bombastic_api_url="$(read_required_secret_key bombastic_api_url)"
+        oidc_issuer_url="$(read_required_secret_key oidc_issuer_url)"
+        oidc_client_id="$(read_required_secret_key oidc_client_id)"
+        oidc_client_secret="$(read_required_secret_key oidc_client_secret)"
+
+        curl_opts=(--silent --show-error --fail-with-body --retry "$HTTP_RETRIES")
+
+        # https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig
+        openid_configuration_url="${oidc_issuer_url%/}/.well-known/openid-configuration"
+        echo "Getting OIDC issuer configuration from $openid_configuration_url"
+        # https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
+        token_endpoint="$(curl "${curl_opts[@]}" "$openid_configuration_url" | jq -r .token_endpoint)"
+
+        for sbom_path in "${sboms_to_upload[@]}"; do
+          original_sbom_relpath="$(realpath "$sbom_path" --relative-base="$SBOMS_DIR")"
+          echo
+          echo "--- Processing $original_sbom_relpath ---"
+
+          echo "Getting OIDC token from $token_endpoint"
+          token_response="$(
+            curl "${curl_opts[@]}" \
+              -u "${oidc_client_id}:${oidc_client_secret}" \
+              -d "grant_type=client_credentials" \
+              "$token_endpoint"
+          )"
+          # https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
+          access_token="$(jq -r .access_token <<< "$token_response")"
+          token_type="$(jq -r .token_type <<< "$token_response")"
+          expires_in="$(jq -r ".expires_in // empty" <<< "$token_response")"
+
+          retry_max_time=0  # no limit
+          if [[ -n "$expires_in" ]]; then
+            retry_max_time="$expires_in"
+          fi
+
+          # This sbom_id is the one created in the gather-sboms step - sha256:${checksum}
+          sbom_id="$(basename -s .json "$sbom_path")"
+          supported_version_of_sbom="${sbom_path}.supported_version"
+
+          echo "Uploading SBOM to $bombastic_api_url (with id=$sbom_id)"
+          # https://docs.trustification.dev/trustification/user/bombastic.html#publishing-an-sbom-doc
+          curl "${curl_opts[@]}" \
+            --retry-max-time "$retry_max_time" \
+            -H "authorization: $token_type $access_token" \
+            -H "transfer-encoding: chunked" \
+            -H "content-type: application/json" \
+            --data "@$supported_version_of_sbom" \
+            "$bombastic_api_url/api/v1/sbom?id=$sbom_id"
+        done
+    volumes:
+    - name: trustification-secret
+      secret:
+        optional: true
+        secretName: $(params.TRUSTIFICATION_SECRET_NAME)
+    workspaces:
+    - description: Directory containing the SBOMs to upload
+      name: sboms
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{},"labels":{"rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"verify-commit","namespace":"my-quarkus-app-dev"},"spec":{"description":"This task verifies the latest commit signature","params":[{"default":"http://tuf.trusted-artifact-signer.svc","description":"TUF mirror","name":"tuf-mirror","type":"string"},{"default":"user1@opentlc.com","description":"Email address of committer","name":"certificate-identity","type":"string"},{"default":"https://keycloak-keycloak-system.apps.cluster-v42rv.sandbox795.opentlc.com/auth/realms/sigstore","description":"OIDC issuer","name":"oidc-issuer","type":"string"},{"default":"http://rekor-server.trusted-artifact-signer.svc","description":"Rekor URL","name":"rekor-url","type":"string"}],"stepTemplate":{"env":[{"name":"GITSIGN_REKOR_URL","value":"$(params.rekor-url)"}]},"steps":[{"image":"alpine/git:latest","name":"git-verify","script":"apk add rpm cosign\nrm -f gitsign_0.7.1_linux_amd64.rpm\nwget -q https://github.com/sigstore/gitsign/releases/download/v0.7.1/gitsign_0.7.1_linux_amd64.rpm\nrpm -ivh gitsign_0.7.1_linux_amd64.rpm\ngit config --global --add safe.directory /workspace/repository\ncosign initialize --mirror=$(params.tuf-mirror) --root=$(params.tuf-mirror)/root.json\ngit show -s\ngitsign verify --certificate-identity=$(params.certificate-identity) --certificate-oidc-issuer=$(params.oidc-issuer) HEAD \\\n|| (echo \"Unable to verify commit signature!  Please ensure that the RHEL9 VM was used for source code commits or you have configured GitSign on your development machine correctly.\" \u0026\u0026 exit 1)\n","workingDir":"/workspace/repository"}],"workspaces":[{"name":"repository"}]}}
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: verify-commit
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467461"
+    uid: ca4e7a07-35f9-4a4f-bf78-17e780c29c33
+  spec:
+    description: This task verifies the latest commit signature
+    params:
+    - default: http://tuf.trusted-artifact-signer.svc
+      description: TUF mirror
+      name: tuf-mirror
+      type: string
+    - default: user1@opentlc.com
+      description: Email address of committer
+      name: certificate-identity
+      type: string
+    - default: https://keycloak-keycloak-system.apps.cluster-v42rv.sandbox795.opentlc.com/auth/realms/sigstore
+      description: OIDC issuer
+      name: oidc-issuer
+      type: string
+    - default: http://rekor-server.trusted-artifact-signer.svc
+      description: Rekor URL
+      name: rekor-url
+      type: string
+    stepTemplate:
+      computeResources: {}
+      env:
+      - name: GITSIGN_REKOR_URL
+        value: $(params.rekor-url)
+    steps:
+    - computeResources: {}
+      image: alpine/git:latest
+      name: git-verify
+      script: |
+        apk add rpm cosign
+        rm -f gitsign_0.7.1_linux_amd64.rpm
+        wget -q https://github.com/sigstore/gitsign/releases/download/v0.7.1/gitsign_0.7.1_linux_amd64.rpm
+        rpm -ivh gitsign_0.7.1_linux_amd64.rpm
+        git config --global --add safe.directory /workspace/repository
+        cosign initialize --mirror=$(params.tuf-mirror) --root=$(params.tuf-mirror)/root.json
+        git show -s
+        gitsign verify --certificate-identity=$(params.certificate-identity) --certificate-oidc-issuer=$(params.oidc-issuer) HEAD \
+        || (echo "Unable to verify commit signature!  Please ensure that the RHEL9 VM was used for source code commits or you have configured GitSign on your development machine correctly." && exit 1)
+      workingDir: /workspace/repository
+    workspaces:
+    - name: repository
+- apiVersion: tekton.dev/v1
+  kind: Task
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{"task.output.location":"logs","task.results.container":"step-report-json","task.results.format":"application/json","task.results.type":"ec","tekton.dev/displayName":"Verify Enterprise Contract","tekton.dev/pipelines.minVersion":"0.19","tekton.dev/tags":"ec, chains, signature, conftest"},"labels":{"app.kubernetes.io/version":"0.1","rht-gitops.com/janus-argocd":"my-quarkus-app-dev-build"},"name":"verify-enterprise-contract","namespace":"my-quarkus-app-dev"},"spec":{"description":"Verify the enterprise contract is met","params":[{"name":"IMAGE","type":"string"},{"name":"COMPONENT_ID","type":"string"},{"default":"enterprise-contract-service/default","description":"Name of the policy configuration (EnterpriseContractPolicy\nresource) to use. `namespace/name` or `name` syntax supported. If\nnamespace is omitted the namespace where the task runs is used.\n","name":"POLICY_CONFIGURATION","type":"string"},{"default":"false","description":"Skip Rekor transparency log checks during validation.","name":"IGNORE_REKOR","type":"string"},{"default":"","description":"TUF mirror URL. Provide a value when NOT using public sigstore deployment.","name":"TUF_MIRROR","type":"string"},{"default":"","description":"Path to a directory containing SSL certs to be used when communicating\nwith external services. This is useful when using the integrated registry\nand a local instance of Rekor on a development cluster which may use\ncertificates issued by a not-commonly trusted root CA. In such cases,\n\"/var/run/secrets/kubernetes.io/serviceaccount\" is a good value. Multiple\npaths can be provided by using the \":\" separator.\n","name":"SSL_CERT_DIR","type":"string"},{"default":"true","description":"Include rule titles and descriptions in the output. Set to \"false\" to disable it.","name":"INFO","type":"string"},{"default":"true","description":"Fail the task if policy fails. Set to \"false\" to disable it.","name":"STRICT","type":"string"},{"default":"/tekton/home","description":"Value for the HOME environment variable.","name":"HOMEDIR","type":"string"},{"default":"now","description":"Run policy checks with the provided time.","name":"EFFECTIVE_TIME","type":"string"},{"default":"https://rekor.sigstore.dev","description":"Rekor host for transparency log lookups","name":"REKOR_HOST","type":"string"},{"name":"CI_PROJECT_URL","type":"string"},{"name":"GIT_REVISION","type":"string"}],"results":[{"description":"Short summary of the policy evaluation for each image","name":"TEST_OUTPUT"}],"stepTemplate":{"env":[{"name":"HOME","value":"$(params.HOMEDIR)"}]},"steps":[{"image":"ubi8/ubi-minimal","name":"create-images-yaml","resources":{},"script":"cat \u003c\u003cEOF | tee /workspace/images.yaml\n---\ncomponents:\n  - containerImage: \"$(params.IMAGE)\"\n    source:\n      git:\n        url: \"$(params.CI_PROJECT_URL)\"\n        revision: \"$(params.GIT_REVISION)\"\nEOF\n"},{"args":["oc get secret signing-secrets -n openshift-pipelines -o json \u003e /workspace/signing-secrets"],"command":["/bin/bash","-c"],"image":"quay.io/openshift/origin-cli:latest","name":"extract-signing-secret","resources":{}},{"image":"quay.io/redhat-gpte/jq","name":"extract-cosign-public-key","resources":{},"script":"set +x\ncat /workspace/signing-secrets | jq -r '.data.\"cosign.pub\"' | base64 --decode \u003e /workspace/cosign.pub\ncat /workspace/cosign.pub\n"},{"args":["version"],"command":["ec"],"image":"quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0","name":"version"},{"env":[{"name":"TUF_MIRROR","value":"$(params.TUF_MIRROR)"}],"image":"quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0","name":"initialize-tuf","script":"set -euo pipefail\n\nif [[ -z \"${TUF_MIRROR:-}\" ]]; then\n    echo 'TUF_MIRROR not set. Skipping TUF root initialization.'\n    exit\nfi\n\necho 'Initializing TUF root...'\ncosign initialize --mirror \"${TUF_MIRROR}\" --root \"${TUF_MIRROR}/root.json\"\necho 'Done!'"},{"args":["validate","image","--verbose","--images","/workspace/images.yaml","--policy","$(params.POLICY_CONFIGURATION)","--public-key","/workspace/cosign.pub","--rekor-url","$(params.REKOR_HOST)","--ignore-rekor=$(params.IGNORE_REKOR)","--info=$(params.INFO)","--strict=false","--show-successes","--effective-time=$(params.EFFECTIVE_TIME)","--output","yaml=$(params.HOMEDIR)/report.yaml","--output","appstudio=$(results.TEST_OUTPUT.path)","--output","data=$(params.HOMEDIR)/data.yaml","--output","attestation=$(params.HOMEDIR)/attestations.jsonl","--output","json=$(params.HOMEDIR)/report-json.json"],"command":["ec"],"image":"quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0","name":"validate","volumeMounts":[{"mountPath":"$(params.HOMEDIR)/.docker","name":"docker-config"}]},{"args":["$(params.HOMEDIR)/report.yaml"],"command":["cat"],"image":"quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0","name":"report"},{"args":["$(params.HOMEDIR)/data.yaml"],"command":["cat"],"image":"quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0","name":"data"},{"args":["$(params.HOMEDIR)/attestations.jsonl"],"command":["cat"],"image":"quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0","name":"attestations"},{"args":["$(params.HOMEDIR)/report-json.json"],"command":["cat"],"image":"quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0","name":"report-json"},{"args":[".","$(results.TEST_OUTPUT.path)"],"command":["jq"],"image":"quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0","name":"summary"},{"args":["--argjson","strict","$(params.STRICT)","-e",".result == \"SUCCESS\" or .result == \"WARNING\" or ($strict | not)\n","$(results.TEST_OUTPUT.path)"],"command":["jq"],"image":"quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0","name":"assert"}],"volumes":[{"name":"docker-config","secret":{"items":[{"key":".dockerconfigjson","path":"config.json"}],"secretName":"$(params.COMPONENT_ID)-docker-config"}}],"workspaces":[{"description":"The workspace where the snapshot spec json file resides","name":"data","optional":true}]}}
+      task.output.location: logs
+      task.results.container: step-report-json
+      task.results.format: application/json
+      task.results.type: ec
+      tekton.dev/displayName: Verify Enterprise Contract
+      tekton.dev/pipelines.minVersion: "0.19"
+      tekton.dev/tags: ec, chains, signature, conftest
+    creationTimestamp: "2024-08-20T16:35:41Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/version: "0.1"
+      rht-gitops.com/janus-argocd: my-quarkus-app-dev-build
+    name: verify-enterprise-contract
+    namespace: my-quarkus-app-dev
+    resourceVersion: "467468"
+    uid: a7eeb0c4-35ed-445a-b39a-a621c999c6b7
+  spec:
+    description: Verify the enterprise contract is met
+    params:
+    - name: IMAGE
+      type: string
+    - name: COMPONENT_ID
+      type: string
+    - default: enterprise-contract-service/default
+      description: |
+        Name of the policy configuration (EnterpriseContractPolicy
+        resource) to use. `namespace/name` or `name` syntax supported. If
+        namespace is omitted the namespace where the task runs is used.
+      name: POLICY_CONFIGURATION
+      type: string
+    - default: "false"
+      description: Skip Rekor transparency log checks during validation.
+      name: IGNORE_REKOR
+      type: string
+    - default: ""
+      description: TUF mirror URL. Provide a value when NOT using public sigstore
+        deployment.
+      name: TUF_MIRROR
+      type: string
+    - default: ""
+      description: |
+        Path to a directory containing SSL certs to be used when communicating
+        with external services. This is useful when using the integrated registry
+        and a local instance of Rekor on a development cluster which may use
+        certificates issued by a not-commonly trusted root CA. In such cases,
+        "/var/run/secrets/kubernetes.io/serviceaccount" is a good value. Multiple
+        paths can be provided by using the ":" separator.
+      name: SSL_CERT_DIR
+      type: string
+    - default: "true"
+      description: Include rule titles and descriptions in the output. Set to "false"
+        to disable it.
+      name: INFO
+      type: string
+    - default: "true"
+      description: Fail the task if policy fails. Set to "false" to disable it.
+      name: STRICT
+      type: string
+    - default: /tekton/home
+      description: Value for the HOME environment variable.
+      name: HOMEDIR
+      type: string
+    - default: now
+      description: Run policy checks with the provided time.
+      name: EFFECTIVE_TIME
+      type: string
+    - default: https://rekor.sigstore.dev
+      description: Rekor host for transparency log lookups
+      name: REKOR_HOST
+      type: string
+    - name: CI_PROJECT_URL
+      type: string
+    - name: GIT_REVISION
+      type: string
+    results:
+    - description: Short summary of the policy evaluation for each image
+      name: TEST_OUTPUT
+      type: string
+    stepTemplate:
+      computeResources: {}
+      env:
+      - name: HOME
+        value: $(params.HOMEDIR)
+    steps:
+    - computeResources: {}
+      image: ubi8/ubi-minimal
+      name: create-images-yaml
+      script: |
+        cat <<EOF | tee /workspace/images.yaml
+        ---
+        components:
+          - containerImage: "$(params.IMAGE)"
+            source:
+              git:
+                url: "$(params.CI_PROJECT_URL)"
+                revision: "$(params.GIT_REVISION)"
+        EOF
+    - args:
+      - oc get secret signing-secrets -n openshift-pipelines -o json > /workspace/signing-secrets
+      command:
+      - /bin/bash
+      - -c
+      computeResources: {}
+      image: quay.io/openshift/origin-cli:latest
+      name: extract-signing-secret
+    - computeResources: {}
+      image: quay.io/redhat-gpte/jq
+      name: extract-cosign-public-key
+      script: |
+        set +x
+        cat /workspace/signing-secrets | jq -r '.data."cosign.pub"' | base64 --decode > /workspace/cosign.pub
+        cat /workspace/cosign.pub
+    - args:
+      - version
+      command:
+      - ec
+      computeResources: {}
+      image: quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0
+      name: version
+    - computeResources: {}
+      env:
+      - name: TUF_MIRROR
+        value: $(params.TUF_MIRROR)
+      image: quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0
+      name: initialize-tuf
+      script: |-
+        set -euo pipefail
+
+        if [[ -z "${TUF_MIRROR:-}" ]]; then
+            echo 'TUF_MIRROR not set. Skipping TUF root initialization.'
+            exit
+        fi
+
+        echo 'Initializing TUF root...'
+        cosign initialize --mirror "${TUF_MIRROR}" --root "${TUF_MIRROR}/root.json"
+        echo 'Done!'
+    - args:
+      - validate
+      - image
+      - --verbose
+      - --images
+      - /workspace/images.yaml
+      - --policy
+      - $(params.POLICY_CONFIGURATION)
+      - --public-key
+      - /workspace/cosign.pub
+      - --rekor-url
+      - $(params.REKOR_HOST)
+      - --ignore-rekor=$(params.IGNORE_REKOR)
+      - --info=$(params.INFO)
+      - --strict=false
+      - --show-successes
+      - --effective-time=$(params.EFFECTIVE_TIME)
+      - --output
+      - yaml=$(params.HOMEDIR)/report.yaml
+      - --output
+      - appstudio=$(results.TEST_OUTPUT.path)
+      - --output
+      - data=$(params.HOMEDIR)/data.yaml
+      - --output
+      - attestation=$(params.HOMEDIR)/attestations.jsonl
+      - --output
+      - json=$(params.HOMEDIR)/report-json.json
+      command:
+      - ec
+      computeResources: {}
+      image: quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0
+      name: validate
+      volumeMounts:
+      - mountPath: $(params.HOMEDIR)/.docker
+        name: docker-config
+    - args:
+      - $(params.HOMEDIR)/report.yaml
+      command:
+      - cat
+      computeResources: {}
+      image: quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0
+      name: report
+    - args:
+      - $(params.HOMEDIR)/data.yaml
+      command:
+      - cat
+      computeResources: {}
+      image: quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0
+      name: data
+    - args:
+      - $(params.HOMEDIR)/attestations.jsonl
+      command:
+      - cat
+      computeResources: {}
+      image: quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0
+      name: attestations
+    - args:
+      - $(params.HOMEDIR)/report-json.json
+      command:
+      - cat
+      computeResources: {}
+      image: quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0
+      name: report-json
+    - args:
+      - .
+      - $(results.TEST_OUTPUT.path)
+      command:
+      - jq
+      computeResources: {}
+      image: quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0
+      name: summary
+    - args:
+      - --argjson
+      - strict
+      - $(params.STRICT)
+      - -e
+      - |
+        .result == "SUCCESS" or .result == "WARNING" or ($strict | not)
+      - $(results.TEST_OUTPUT.path)
+      command:
+      - jq
+      computeResources: {}
+      image: quay.io/enterprise-contract/ec-cli:362c6d6824695987bcdb7936c2efa35fd8ffb0e0
+      name: assert
+    volumes:
+    - name: docker-config
+      secret:
+        items:
+        - key: .dockerconfigjson
+          path: config.json
+        secretName: $(params.COMPONENT_ID)-docker-config
+    workspaces:
+    - description: The workspace where the snapshot spec json file resides
+      name: data
+      optional: true
+kind: List
+metadata:
+  resourceVersion: ""

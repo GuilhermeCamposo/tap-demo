@@ -1,0 +1,9 @@
+- name: Evaluate Namespace {{ rhdh_project }}
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Namespace
+    name: '{{ rhdh_project }}'
+    state: present

@@ -1,0 +1,61 @@
+- name: Evaluate Namespace rhdh-operator
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Namespace
+    name: rhdh-operator
+    state: present
+
+- name: Evaluate OperatorGroup rhdh-operator
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: operators.coreos.com/v1
+    kind: OperatorGroup
+    definition:
+      metadata:
+        name: 'rhdh-operator-group'
+        namespace: 'rhdh-operator'
+      spec:
+        upgradeStrategy: Default
+
+- name: Check Developer Hub Subscription
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    kind: Subscription
+    api_version: operators.coreos.com/v1alpha1
+    definition:
+      metadata:
+        name: rhdh
+        namespace: rhdh-operator
+      spec:
+        channel: fast
+        installPlanApproval: Automatic
+        name: rhdh
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+        startingCSV: rhdh-operator.v1.2.3-0.1724956299.p
+
+- name: Wait for Developer Hub  operator to be running
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: 'rhdh-operator'
+    label_selectors:
+      - app=rhdh-operator
+      - app.kubernetes.io/component=rhdh-operator
+    field_selectors:
+      - status.phase=Running
+  register: r_streams_pod
+  retries: 10
+  delay: 20
+  until: r_streams_pod.resources | list | length == 1        
