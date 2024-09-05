@@ -1,10 +1,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: backstage-dynamic-plugins-developer-hub
-  labels:
-    app.kubernetes.io/instance: developer-hub
-    app.kubernetes.io/name: backstage
+  name: dynamic-plugins-rhdh
 data:
   dynamic-plugins.yaml: |
     includes:

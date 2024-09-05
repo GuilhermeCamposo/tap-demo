@@ -47,7 +47,46 @@
     headers:
       Content-Type: "application/json"
       Authorization: "Bearer {{ rhsso_admin_token.json.access_token }}"
-    body: "{{ lookup('template', 'realm-export.json.j2') }}"
+    body: "{{ lookup('template', 'tas-realm-export.json.j2') }}"
     return_content: true
     validate_certs: '{{ verify_tls }}'
     status_code: 201
+
+- name: Create trusted-artifact-signer user
+  ansible.builtin.uri:
+    url: 'https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/admin/realms/{{ keycloak_tas_realm_name }}/users'
+    method: POST
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ rhsso_admin_token.json.access_token }}"
+    body: "{{ lookup('template', 'user-template.json.j2') }}"
+    return_content: true
+    validate_certs: '{{ verify_tls }}'
+    status_code: 201    
+
+- name: Create RHDH Realm
+  ansible.builtin.uri:
+    url: 'https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/admin/realms'
+    method: POST
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ rhsso_admin_token.json.access_token }}"
+    body: "{{ lookup('template', 'rhdh-realm-export.json.j2') }}"
+    return_content: true
+    validate_certs: '{{ verify_tls }}'
+    status_code: 201
+
+- name: Create RHDH user
+  ansible.builtin.uri:
+    url: 'https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/admin/realms/{{ rhdh_keycloak_realm }}/users'
+    method: POST
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ rhsso_admin_token.json.access_token }}"
+    body: "{{ lookup('template', 'user-template.json.j2') }}"
+    return_content: true
+    validate_certs: '{{ verify_tls }}'
+    status_code: 201    

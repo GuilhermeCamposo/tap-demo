@@ -4,7 +4,12 @@
     delete_demo: false
     verify_tls: false
     insecure_skip_tls_verify: true
+
     keycloak_project: keycloak-system
+    keycloak_tas_realm_name: trusted-artifact-signer
+    keycloak_user_username: admin
+    keycloak_user_password: password
+    
     kafka_project: '{{ tpa_project }}'
 
     # TPA configuration
@@ -81,3 +86,7 @@
     - name: Include TPA
       ansible.builtin.include_role:
         name: tpa
+
+    - name: Include RHDH
+      ansible.builtin.include_role:
+        name: devhub

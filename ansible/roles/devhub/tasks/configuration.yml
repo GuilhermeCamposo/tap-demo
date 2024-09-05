@@ -7,3 +7,33 @@
     kind: Namespace
     name: '{{ rhdh_project }}'
     state: present
+
+- name: Evaluate RHDH Configuration 
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ rhdh_project }}'
+    resource_definition: "{{ lookup('template', item) }}"
+  loop: 
+    - app-cm-oidc.yml.j2
+    - secrets-rhdh.yml.j2
+
+- name: Evaluate RHDH dynamic-plugins Configuration 
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ rhdh_project }}'
+    resource_definition: "{{ lookup('file', 'dynamic-plugins.yml') }}"
+
+- name: Evaluate RHDH Instance 
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ rhdh_project }}'
+    resource_definition: "{{ lookup('template', 'backstage.yml.j2') }}"
