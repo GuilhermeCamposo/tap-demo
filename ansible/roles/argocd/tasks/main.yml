@@ -2,10 +2,6 @@
   include_tasks: install.yml
   when: not delete_demo
 
-# - name: Configure GitOps
-#   include_tasks: configure.yml
-#   when: not delete_demo
-
 - name: Delete GitOps
   include_tasks: delete.yml
   when: delete_demo | bool
