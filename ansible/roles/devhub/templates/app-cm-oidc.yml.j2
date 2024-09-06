@@ -49,4 +49,49 @@ data:
               initialDelay:
                 seconds: 15
               timeout:
-                minutes: 1
+                minutes: 1                        
+    integrations:
+      github:
+      - host: github.com
+        token: {{ github_pat }}
+    argocd:
+      appLocatorMethods:
+        - type: config
+          instances:
+            - name: default
+              url: https://openshift-gitops-server-openshift-gitops.{{ route_subdomain }}
+              username: admin
+              password: {{ arcocd_admin_password }}                  
+    kubernetes:
+      clusterLocatorMethods:
+      - clusters:
+        - authProvider: serviceAccount
+          name: {{ rhdh_sa_name }}
+          serviceAccountToken: {{ rhdh_sa_token }}
+          skipTLSVerify: true
+          url: {{ server }}
+        type: config
+      customResources:
+      - apiVersion: v1beta1
+        group: tekton.dev
+        plural: pipelineruns
+      - apiVersion: v1beta1
+        group: tekton.dev
+        plural: taskruns
+      - apiVersion: v1
+        group: route.openshift.io
+        plural: routes
+      serviceLocatorMethod:
+        type: multiTenant
+    permission:
+      enabled: false
+    enabled:
+      argocd: true
+      github: true
+      githubOrg: false
+      keycloak: true
+      kubernetes: true
+      permission: false
+      techdocs: false
+
+             

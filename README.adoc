@@ -13,9 +13,10 @@
 
 [options="header"]
 |=======================
-| Parameter | Example Value                                      | Definition
-| token     | sha256~vFanQbthlPKfsaldJT3bdLXIyEkd7ypO_XPygY1DNtQ | access token for a user with cluster-admin privileges
-| server    | https://api.mycluster.domain.com:6443              | OpenShift cluster API URL
+| Parameter  | Example Value                                      | Definition
+| token      | sha256~vFanQbthlPKfsaldJT3bdLXIyEkd7ypO_XPygY1DNtQ | access token for a user with cluster-admin privileges
+| server     | https://api.mycluster.domain.com:6443              | OpenShift cluster API URL
+| github_pat | longString                                         | Personal Access Token used to download and publish content on Github. For information regarding scope, refer to the https://backstage.io/docs/integrations/github/locations[docs]
 |=======================
 
 ===  How to run the playbook

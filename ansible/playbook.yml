@@ -28,6 +28,7 @@
     rhdh_keycloak_realm: rhdh
     rhdh_keycloak_client_id: rhdh
     rhdh_keycloak_client_secret: 9IAuKgbRcEUTU4mjeUUTY25P6IKo0B6L
+    rhdh_sa_name: local-cluster
 
     # pipeline
     pipeline_project: demo-tap-pipeline
@@ -62,7 +63,7 @@
     - name: Set Subdomain
       ansible.builtin.set_fact:
         route_subdomain: "apps.{{ domain }}"
-
+        
     - name: Include Keycloak
       ansible.builtin.include_role:
         name: keycloak
