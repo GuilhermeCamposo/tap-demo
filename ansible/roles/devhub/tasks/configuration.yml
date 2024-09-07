@@ -1,3 +1,10 @@
+- name: Check Required Parameters
+  ansible.builtin.fail:
+    msg: "You need to set github_pat to configure RHDH"
+  when:
+    - (github_pat is not defined)  or (github_pat is none)
+  ignore_errors: false
+
 - name: Evaluate Namespace {{ rhdh_project }}
   kubernetes.core.k8s:
     api_key: '{{ token }}'
