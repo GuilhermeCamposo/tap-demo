@@ -1,2 +1,0 @@
-tekton_storage_class: gp2
-tekton_shared_workspace_storage_size: 1Gi

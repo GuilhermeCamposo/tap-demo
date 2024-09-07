@@ -30,6 +30,8 @@
     rhdh_keycloak_client_secret: 9IAuKgbRcEUTU4mjeUUTY25P6IKo0B6L
     rhdh_sa_name: local-cluster
 
+    gitops_project: rhtap
+
     # pipeline
     pipeline_project: demo-tap-pipeline
     pipeline_app_name:

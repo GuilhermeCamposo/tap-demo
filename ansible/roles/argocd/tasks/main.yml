@@ -1,7 +1,7 @@
-- name: Provision GitOps
-  include_tasks: install.yml
+- name: Install GitOps
+  include_tasks: installation.yml
   when: not delete_demo
 
-- name: Delete GitOps
-  include_tasks: delete.yml
-  when: delete_demo | bool
+- name: Configure GitOps
+  include_tasks: configuration.yml
+  when: not delete_demo | bool

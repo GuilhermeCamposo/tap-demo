@@ -49,21 +49,13 @@
     namespace: '{{ rhdh_project }}'
     state: present
 
-- name: Evaluate RHDH Required CR
-  kubernetes.core.k8s:
-    api_key: '{{ token }}'
-    host: '{{ server }}'
-    validate_certs: false
-    state: present
-    resource_definition: "{{ lookup('file', 'tekton-permissions.yml') }}"
-
 - name: Evaluate RHDH CRB
   kubernetes.core.k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'
     validate_certs: false
     state: present
-    resource_definition: "{{ lookup('template', 'rhdh-crb.yml.j2') }}"
+    resource_definition: "{{ lookup('template', 'rhdh-view-crb.yml.j2') }}"
 
 - name: Log in as super user with token on OpenShift 4
   ansible.builtin.command: "oc login --token={{ token }}  --server={{ server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"

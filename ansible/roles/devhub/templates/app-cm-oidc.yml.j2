@@ -35,6 +35,12 @@ data:
                 - resolver: preferredUsernameMatchingUserEntityName 
     signInPage: oidc
     catalog:
+      locations:
+      - rules:
+        - allow:
+          - Template
+        target: https://github.com/GcBackstageDemos/tssc-sample-templates/blob/main/all.yaml
+        type: url    
       providers:
         keycloakOrg:
           default:
