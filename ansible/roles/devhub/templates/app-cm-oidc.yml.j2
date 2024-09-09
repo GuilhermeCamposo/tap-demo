@@ -36,11 +36,13 @@ data:
     signInPage: oidc
     catalog:
       locations:
+{% for _rhdh_template_urls in rhdh_template_urls %}      
       - rules:
         - allow:
           - Template
-        target: https://github.com/GcBackstageDemos/tssc-sample-templates/blob/main/all.yaml
-        type: url    
+        target: {{ _rhdh_template_urls }}
+        type: url
+{% endfor %}             
       providers:
         keycloakOrg:
           default:

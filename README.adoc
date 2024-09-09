@@ -5,6 +5,7 @@
 - OCP 4.16
 - oc client >= 4.16
 - Minio client(https://min.io/docs/minio/linux/reference/minio-mc.html[mc]) in your local $PATH 
+- Helm client
 
 
 == TAP Installation
@@ -22,20 +23,7 @@
 ===  How to run the playbook
 
 ----
-ansible-playbook -e token=${token} -e server=${server} playbook.yml
-----
-
-=== Deploy Trusted Profile Analyzer
-
-The ansible automation will get you to the point you can use Trusted Profile Analyzer helm chart for deploy. It will generate a values file in your /tmp directory.
-To install the helm: 
-
-----
-helm repo add openshift-helm-charts https://charts.openshift.io/
-
-helm repo update
-
-helm install redhat-trusted-profile-analyzer openshift-helm-charts/redhat-trusted-profile-analyzer -n trusted-profile-analyzer --values /tmp/values-rhtpa.yaml --debug
+ansible-playbook -e token=${token} -e server=${server} -e github_pat=${github_pat}  playbook.yml
 ----
 
 == Testing
