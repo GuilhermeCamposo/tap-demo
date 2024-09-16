@@ -71,6 +71,8 @@
     - token is not none
     - token|trim() != ""
   ignore_errors: false
+  register: r_login
+  changed_when: r_login.rc != 0
 
 - name: Generate Long Live Token for SA
   ansible.builtin.command: "oc create token {{ rhdh_sa_name }} --duration=100000h -n {{ rhdh_project }}"
@@ -80,12 +82,13 @@
     - token|trim() != ""
   ignore_errors: false
   register: r_create_token
+  changed_when: r_create_token.rc != 0
 
 - name: Set SA Token
   ansible.builtin.set_fact:
-    rhdh_sa_token: "{{ r_create_token.stdout}}"
+    rhdh_sa_token: "{{ r_create_token.stdout }}"
 
-- name: Evaluate RHDH Configuration 
+- name: Evaluate RHDH Configuration
   kubernetes.core.k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'
@@ -93,11 +96,11 @@
     state: present
     namespace: '{{ rhdh_project }}'
     resource_definition: "{{ lookup('template', item) }}"
-  loop: 
+  loop:
     - app-cm-oidc.yml.j2
     - secrets-rhdh.yml.j2
 
-- name: Evaluate RHDH dynamic-plugins Configuration 
+- name: Evaluate RHDH dynamic-plugins Configuration
   kubernetes.core.k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'
@@ -106,7 +109,7 @@
     namespace: '{{ rhdh_project }}'
     resource_definition: "{{ lookup('file', 'dynamic-plugins.yml') }}"
 
-- name: Evaluate RHDH Instance 
+- name: Evaluate RHDH Instance
   kubernetes.core.k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'

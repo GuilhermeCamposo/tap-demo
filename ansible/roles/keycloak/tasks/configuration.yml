@@ -63,7 +63,7 @@
     body: "{{ lookup('template', 'user-template.json.j2') }}"
     return_content: true
     validate_certs: '{{ verify_tls }}'
-    status_code: 201    
+    status_code: 201
 
 - name: Create RHDH Realm
   ansible.builtin.uri:
@@ -89,4 +89,4 @@
     body: "{{ lookup('template', 'user-template.json.j2') }}"
     return_content: true
     validate_certs: '{{ verify_tls }}'
-    status_code: 201    
+    status_code: 201

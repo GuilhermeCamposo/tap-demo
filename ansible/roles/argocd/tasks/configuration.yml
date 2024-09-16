@@ -1,4 +1,4 @@
-- name: Evaluate ArgoCD permissions 
+- name: Evaluate ArgoCD permissions
   kubernetes.core.k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'
@@ -6,7 +6,7 @@
     state: present
     resource_definition: "{{ lookup('file', 'crb.yml') }}"
 
-- name: Evaluate ArgoCD Project 
+- name: Evaluate ArgoCD Project
   kubernetes.core.k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'
@@ -15,7 +15,7 @@
     namespace: openshift-gitops
     resource_definition: "{{ lookup('template', 'argo-project.yml.j2') }}"
 
-- name: Evaluate ArgoCD Instance 
+- name: Evaluate ArgoCD Instance
   kubernetes.core.k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'

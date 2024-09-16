@@ -9,7 +9,7 @@
     keycloak_tas_realm_name: trusted-artifact-signer
     keycloak_user_username: admin
     keycloak_user_password: password
-    
+
     kafka_project: '{{ tpa_project }}'
 
     # TPA configuration
@@ -29,14 +29,21 @@
     rhdh_keycloak_client_id: rhdh
     rhdh_keycloak_client_secret: 9IAuKgbRcEUTU4mjeUUTY25P6IKo0B6L
     rhdh_sa_name: local-cluster
+    rhdh_secret_name: secrets-rhdh
+    rhdh_cm_name: app-config-rhdh
+    rhdh_ns: rhdh
     rhdh_template_urls:
-    - https://github.com/GcBackstageDemos/tssc-sample-templates/blob/main/all.yaml
-    - https://github.com/GcBackstageDemos/trusted-application-pipeline-templates/blob/main/showcase-templates.yaml
+      - https://github.com/GcBackstageDemos/tssc-sample-templates/blob/main/all.yaml
+      - https://github.com/GcBackstageDemos/trusted-application-pipeline-templates/blob/main/showcase-templates.yaml
 
     gitops_project: rhtap
 
     # pipeline
     pipeline_project: demo-tap-pipeline
+
+    # Devspaces Configuration
+    devspaces_enabled: false
+
   tasks:
     - name: Check Required Parameters
       ansible.builtin.fail:
@@ -52,7 +59,7 @@
     - name: Set Subdomain
       ansible.builtin.set_fact:
         route_subdomain: "apps.{{ domain }}"
-        
+
     - name: Include Keycloak
       ansible.builtin.include_role:
         name: keycloak
@@ -80,3 +87,8 @@
     - name: Include RHDH
       ansible.builtin.include_role:
         name: devhub
+
+    - name: Include DevSpaces
+      ansible.builtin.include_role:
+        name: devspaces
+      when: devspaces_enabled | bool

@@ -58,4 +58,4 @@
   register: r_streams_pod
   retries: 10
   delay: 20
-  until: r_streams_pod.resources | list | length == 1        
+  until: r_streams_pod.resources | list | length == 1

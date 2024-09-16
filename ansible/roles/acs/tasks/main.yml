@@ -54,7 +54,7 @@
     namespace: 'stackrox'
     resource_definition: "{{ lookup('file', 'central.yml') }}"
   retries: 10
-  delay: 10  
+  delay: 10
 
 - name: Wait ACS Central
   kubernetes.core.k8s_info:
