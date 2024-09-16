@@ -52,12 +52,6 @@
     namespace: '{{ tpa_project }}'
     resource_definition: "{{ lookup('template', 'secrets.yml.j2') }}"
 
-# - name: Create values for Helm deployment
-#   ansible.builtin.copy:
-#     content: "{{ lookup('template', 'values-rhtpa.yaml.j2') }}"
-#     dest: "/tmp/values-rhtpa.yaml"
-#     mode: "0655"
-
 - name: Add openshift-helm-charts chart repo
   kubernetes.core.helm_repository:
     name: openshift-helm-charts
@@ -65,29 +59,39 @@
   ignore_errors: true
   register: ignore_errors_register
 
-# - name: Log in as super user with token on OpenShift 4
-#   ansible.builtin.command: "oc login --token={{ token }}  --server={{ server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
-#   when:
-#     - token is defined
-#     - token is not none
-#     - token|trim() != ""
-#   ignore_errors: false
-#   register: r_login
-#   changed_when: r_login.rc != 0
+- name: Log in as super user with token on OpenShift 4
+  ansible.builtin.command: "oc login --token={{ token }}  --server={{ server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
+  when:
+    - token is defined
+    - token is not none
+    - token|trim() != ""
+  ignore_errors: false
+  register: r_login
+  changed_when: r_login.rc != 0
 
-# - name: Install Helm
-#   ansible.builtin.command: |
-#     "helm install redhat-trusted-profile-analyzer openshift-helm-charts/redhat-trusted-profile-analyzer -n trusted-profile-analyzer --values /tmp/values-rhtpa.yaml"
-#   ignore_errors: false
+- name: Create values for Helm deployment
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'values-rhtpa.yaml.j2') }}"
+    dest: "/tmp/v_rhtpa.yml"
+    mode: "0655"
 
-- name: Deploy redhat-trusted-profile-analyzer chart
-  kubernetes.core.helm:
-    api_key: '{{ token }}'
-    host: '{{ server }}'
-    validate_certs: false
-    name: redhat-trusted-profile-analyzer
-    chart_ref: openshift-helm-charts/redhat-trusted-profile-analyzer
-    chart_version: '0.1.1'
-    release_namespace: '{{ tpa_project }}'
-    update_repo_cache: false
-    values: "{{ lookup('template', 'values-rhtpa.yaml.j2') | from_yaml }}"
+- name: Install Helm
+  ansible.builtin.command: |
+    helm install redhat-trusted-profile-analyzer openshift-helm-charts/redhat-trusted-profile-analyzer -n trusted-profile-analyzer --values /tmp/v_rhtpa.yml
+  ignore_errors: false
+  register: r_cmd
+  changed_when: r_cmd.rc != 0
+
+#  I can't make helm plugin to work on my environments. Maybe one day...
+#
+# - name: Deploy redhat-trusted-profile-analyzer chart
+#   kubernetes.core.helm:
+#     api_key: '{{ token }}'
+#     host: '{{ server }}'
+#     validate_certs: false
+#     name: redhat-trusted-profile-analyzer
+#     chart_ref: openshift-helm-charts/redhat-trusted-profile-analyzer
+#     chart_version: '0.1.1'
+#     release_namespace: '{{ tpa_project }}'
+#     update_repo_cache: false
+#     values: "{{ lookup('template', 'values-rhtpa.yaml.j2') | from_yaml }}"
