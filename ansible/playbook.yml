@@ -33,8 +33,8 @@
     rhdh_cm_name: app-config-rhdh
     rhdh_ns: rhdh
     rhdh_template_urls:
-      - https://github.com/GcBackstageDemos/tssc-sample-templates/blob/main/all.yaml
-      - https://github.com/GcBackstageDemos/trusted-application-pipeline-templates/blob/main/showcase-templates.yaml
+      - https://github.com/GcBackstageDemos/tssc-sample-templates/blob/my-version/all.yaml
+      - https://github.com/GcBackstageDemos/trusted-application-pipeline-templates/blob/my-version/showcase-templates.yaml
 
     gitops_project: rhtap
 
