@@ -37,7 +37,10 @@
   ansible.builtin.command: "mc config host add tpa-minio https://minio-{{ minio_project }}.{{ route_subdomain }}:443 {{ minio_key }} {{ minio_secret }}"
   ignore_errors: false
   register: my_output
-  changed_when: my_output.rc != 0
+  changed_when: my_output.rc == 0
+  retries: 10
+  delay: 10
+  until: my_output.rc == 0
 
 - name: List buckets
   ansible.builtin.command: "mc ls tpa-minio"
