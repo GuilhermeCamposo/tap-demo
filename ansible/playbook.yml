@@ -42,7 +42,8 @@
     pipeline_project: demo-tap-pipeline
 
     # Devspaces Configuration
-    devspaces_enabled: false
+    devspaces_enabled: true
+    acs_enabled: false
 
   tasks:
     - name: Check Required Parameters
@@ -67,6 +68,7 @@
     - name: Include ACS
       ansible.builtin.include_role:
         name: acs
+      when: acs_enabled | bool
 
     - name: Include Tekton
       ansible.builtin.include_role:
