@@ -74,24 +74,6 @@
         "attributes": {}
       },
       {
-        "id": "0fa3fbc0-8409-487f-83ad-1e99175919b3",
-        "name": "trusted-artifact-signer-admin",
-        "description": "",
-        "composite": false,
-        "clientRole": false,
-        "containerId": "71a2e3c8-49ee-4821-a43c-f396a3bc43dd",
-        "attributes": {}
-      },
-      {
-        "id": "22b92d7e-90df-48ab-a025-621069627e0e",
-        "name": "chicken-admin",
-        "description": "",
-        "composite": false,
-        "clientRole": false,
-        "containerId": "71a2e3c8-49ee-4821-a43c-f396a3bc43dd",
-        "attributes": {}
-      },
-      {
         "id": "14658268-0430-4c04-9391-527f48140791",
         "name": "default-roles-trusted-artifact-signer",
         "description": "${role_default-roles}",
@@ -719,18 +701,16 @@
       "redirectUris": [
         "*"
       ],
-      "webOrigins": [
-        "*"
-      ],
+      "webOrigins": [],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
       "standardFlowEnabled": true,
-      "implicitFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "publicClient": true,
-      "frontchannelLogout": false,
+      "frontchannelLogout": true,
       "protocol": "openid-connect",
       "attributes": {
         "oidc.ciba.grant.enabled": "false",
@@ -745,13 +725,10 @@
       "nodeReRegistrationTimeout": -1,
       "defaultClientScopes": [
         "web-origins",
-        "delete:document",
         "acr",
         "profile",
         "roles",
-        "read:document",
-        "email",
-        "create:document"
+        "email"
       ],
       "optionalClientScopes": [
         "address",
@@ -946,9 +923,8 @@
         "oidc.ciba.grant.enabled": "false",
         "client.secret.creation.time": "1723897127",
         "backchannel.logout.session.required": "true",
-        "post.logout.redirect.uris": "+",
-        "display.on.consent.screen": "false",
         "oauth2.device.authorization.grant.enabled": "false",
+        "display.on.consent.screen": "false",
         "backchannel.logout.revoke.offline.tokens": "false"
       },
       "authenticationFlowBindingOverrides": {},
@@ -964,7 +940,6 @@
           "config": {
             "user.session.note": "clientHost",
             "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "clientHost",
@@ -980,7 +955,6 @@
           "config": {
             "user.session.note": "clientAddress",
             "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "clientAddress",
@@ -996,7 +970,6 @@
           "config": {
             "user.session.note": "client_id",
             "introspection.token.claim": "true",
-            "userinfo.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "client_id",
@@ -1278,8 +1251,8 @@
           "protocolMapper": "oidc-allowed-origins-mapper",
           "consentRequired": false,
           "config": {
-            "access.token.claim": "true",
-            "introspection.token.claim": "true"
+            "introspection.token.claim": "true",
+            "access.token.claim": "true"
           }
         }
       ]
@@ -1302,8 +1275,8 @@
           "consentRequired": false,
           "config": {
             "id.token.claim": "true",
-            "access.token.claim": "true",
             "introspection.token.claim": "true",
+            "access.token.claim": "true",
             "userinfo.token.claim": "true"
           }
         }
@@ -1576,8 +1549,8 @@
           "protocolMapper": "oidc-audience-resolve-mapper",
           "consentRequired": false,
           "config": {
-            "access.token.claim": "true",
-            "introspection.token.claim": "true"
+            "introspection.token.claim": "true",
+            "access.token.claim": "true"
           }
         },
         {
@@ -1629,13 +1602,13 @@
     "jboss-logging"
   ],
   "enabledEventTypes": [
-    "SEND_RESET_PASSWORD",
     "UPDATE_CONSENT_ERROR",
+    "SEND_RESET_PASSWORD",
     "GRANT_CONSENT",
     "VERIFY_PROFILE_ERROR",
+    "UPDATE_TOTP",
     "REMOVE_TOTP",
     "REVOKE_GRANT",
-    "UPDATE_TOTP",
     "LOGIN_ERROR",
     "CLIENT_LOGIN",
     "RESET_PASSWORD_ERROR",
@@ -1644,59 +1617,59 @@
     "CUSTOM_REQUIRED_ACTION",
     "OAUTH2_DEVICE_CODE_TO_TOKEN_ERROR",
     "RESTART_AUTHENTICATION",
-    "IMPERSONATE",
     "UPDATE_PROFILE_ERROR",
+    "IMPERSONATE",
     "LOGIN",
-    "OAUTH2_DEVICE_VERIFY_USER_CODE",
     "UPDATE_PASSWORD_ERROR",
+    "OAUTH2_DEVICE_VERIFY_USER_CODE",
     "CLIENT_INITIATED_ACCOUNT_LINKING",
-    "OAUTH2_EXTENSION_GRANT",
     "USER_DISABLED_BY_PERMANENT_LOCKOUT",
+    "OAUTH2_EXTENSION_GRANT",
     "TOKEN_EXCHANGE",
-    "AUTHREQID_TO_TOKEN",
-    "LOGOUT",
     "REGISTER",
+    "LOGOUT",
+    "AUTHREQID_TO_TOKEN",
     "DELETE_ACCOUNT_ERROR",
     "CLIENT_REGISTER",
     "IDENTITY_PROVIDER_LINK_ACCOUNT",
     "USER_DISABLED_BY_TEMPORARY_LOCKOUT",
-    "DELETE_ACCOUNT",
     "UPDATE_PASSWORD",
-    "CLIENT_DELETE",
+    "DELETE_ACCOUNT",
     "FEDERATED_IDENTITY_LINK_ERROR",
+    "CLIENT_DELETE",
     "IDENTITY_PROVIDER_FIRST_LOGIN",
-    "CLIENT_DELETE_ERROR",
     "VERIFY_EMAIL",
+    "CLIENT_DELETE_ERROR",
     "CLIENT_LOGIN_ERROR",
     "RESTART_AUTHENTICATION_ERROR",
-    "EXECUTE_ACTIONS",
     "REMOVE_FEDERATED_IDENTITY_ERROR",
+    "EXECUTE_ACTIONS",
     "TOKEN_EXCHANGE_ERROR",
     "PERMISSION_TOKEN",
     "SEND_IDENTITY_PROVIDER_LINK_ERROR",
     "EXECUTE_ACTION_TOKEN_ERROR",
-    "OAUTH2_EXTENSION_GRANT_ERROR",
     "SEND_VERIFY_EMAIL",
+    "OAUTH2_EXTENSION_GRANT_ERROR",
     "OAUTH2_DEVICE_AUTH",
     "EXECUTE_ACTIONS_ERROR",
     "REMOVE_FEDERATED_IDENTITY",
     "OAUTH2_DEVICE_CODE_TO_TOKEN",
     "IDENTITY_PROVIDER_POST_LOGIN",
     "IDENTITY_PROVIDER_LINK_ACCOUNT_ERROR",
-    "OAUTH2_DEVICE_VERIFY_USER_CODE_ERROR",
     "UPDATE_EMAIL",
+    "OAUTH2_DEVICE_VERIFY_USER_CODE_ERROR",
     "REGISTER_ERROR",
     "REVOKE_GRANT_ERROR",
-    "EXECUTE_ACTION_TOKEN",
     "LOGOUT_ERROR",
     "UPDATE_EMAIL_ERROR",
+    "EXECUTE_ACTION_TOKEN",
     "CLIENT_UPDATE_ERROR",
-    "AUTHREQID_TO_TOKEN_ERROR",
     "UPDATE_PROFILE",
-    "CLIENT_REGISTER_ERROR",
+    "AUTHREQID_TO_TOKEN_ERROR",
     "FEDERATED_IDENTITY_LINK",
-    "SEND_IDENTITY_PROVIDER_LINK",
+    "CLIENT_REGISTER_ERROR",
     "SEND_VERIFY_EMAIL_ERROR",
+    "SEND_IDENTITY_PROVIDER_LINK",
     "RESET_PASSWORD",
     "CLIENT_INITIATED_ACCOUNT_LINKING_ERROR",
     "OAUTH2_DEVICE_AUTH_ERROR",
@@ -1705,8 +1678,8 @@
     "VERIFY_EMAIL_ERROR",
     "SEND_RESET_PASSWORD_ERROR",
     "CLIENT_UPDATE",
-    "CUSTOM_REQUIRED_ACTION_ERROR",
     "IDENTITY_PROVIDER_POST_LOGIN_ERROR",
+    "CUSTOM_REQUIRED_ACTION_ERROR",
     "UPDATE_TOTP_ERROR",
     "CODE_TO_TOKEN",
     "VERIFY_PROFILE",
@@ -1727,14 +1700,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
-            "saml-user-attribute-mapper",
-            "oidc-full-name-mapper",
-            "oidc-address-mapper",
             "oidc-usermodel-property-mapper",
+            "saml-user-attribute-mapper",
             "saml-role-list-mapper",
+            "oidc-sha256-pairwise-sub-mapper",
+            "oidc-address-mapper",
             "oidc-usermodel-attribute-mapper",
             "saml-user-property-mapper",
-            "oidc-sha256-pairwise-sub-mapper"
+            "oidc-full-name-mapper"
           ]
         }
       },
@@ -1814,13 +1787,13 @@
         "config": {
           "allowed-protocol-mapper-types": [
             "oidc-usermodel-property-mapper",
+            "oidc-address-mapper",
+            "oidc-full-name-mapper",
+            "saml-user-property-mapper",
             "oidc-usermodel-attribute-mapper",
             "saml-user-attribute-mapper",
-            "saml-role-list-mapper",
-            "oidc-address-mapper",
             "oidc-sha256-pairwise-sub-mapper",
-            "oidc-full-name-mapper",
-            "saml-user-property-mapper"
+            "saml-role-list-mapper"
           ]
         }
       }
@@ -2539,7 +2512,7 @@
     "cibaInterval": "5",
     "realmReusableOtpCode": "false"
   },
-  "keycloakVersion": "24.0.8.redhat-00001",
+  "keycloakVersion": "24.0.6.redhat-00001",
   "userManagedAccessAllowed": false,
   "clientProfiles": {
     "profiles": []

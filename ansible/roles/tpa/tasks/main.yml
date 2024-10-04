@@ -77,7 +77,7 @@
 
 - name: Install Helm
   ansible.builtin.command: |
-    helm install redhat-trusted-profile-analyzer openshift-helm-charts/redhat-trusted-profile-analyzer -n trusted-profile-analyzer --values /tmp/v_rhtpa.yml
+   helm install tpa --version {{ tpa_helm_version }} openshift-helm-charts/redhat-trusted-profile-analyzer -n trusted-profile-analyzer --values /tmp/v_rhtpa.yml
   ignore_errors: false
   register: r_cmd
   changed_when: r_cmd.rc != 0
