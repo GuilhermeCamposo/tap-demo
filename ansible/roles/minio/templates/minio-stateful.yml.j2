@@ -9,7 +9,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: '{{ minio_storage_size }}'
   volumeMode: Filesystem
 ---
 apiVersion: apps/v1

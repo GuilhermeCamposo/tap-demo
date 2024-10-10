@@ -23,6 +23,7 @@
     minio_key: minio
     minio_secret: minio123
     minio_region: eu-west-1
+    minio_storage_size: 10Gi
 
     # Developer Hub Configuration
     rhdh_project: rhdh

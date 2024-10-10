@@ -12,7 +12,7 @@
         namespace: openshift-operators
       spec:
         installPlanApproval: Automatic
-        channel: latest
+        channel: pipelines-1.16
         name: openshift-pipelines-operator-rh
         source: redhat-operators
         sourceNamespace: openshift-marketplace
