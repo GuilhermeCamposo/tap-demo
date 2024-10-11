@@ -11,6 +11,8 @@
     keycloak_user_password: password
 
     kafka_project: '{{ tpa_project }}'
+    kafka_user_name: tester
+    kafka_bootstrap_host: cluster-kafka-bootstrap
 
     # TPA configuration
     tpa_project: trusted-profile-analyzer
@@ -18,12 +20,9 @@
     tpa_helm_version: 0.1.2
 
     # Minio configuration
-    minio_stateful: true
     minio_project: '{{ tpa_project }}'
     minio_key: minio
     minio_secret: minio123
-    minio_region: eu-west-1
-    minio_storage_size: 10Gi
 
     # Developer Hub Configuration
     rhdh_project: rhdh

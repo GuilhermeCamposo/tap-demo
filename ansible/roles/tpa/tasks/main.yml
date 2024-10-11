@@ -8,13 +8,13 @@
     name: '{{ tpa_project }}'
     state: present
 
-- name: Include Minio
-  ansible.builtin.include_role:
-    name: minio
-
 - name: Include Streams
   ansible.builtin.include_role:
     name: streams
+
+- name: Include Minio
+  ansible.builtin.include_role:
+    name: minio
 
 - name: Evaluate Postgresdb instance
   kubernetes.core.k8s:

@@ -1,20 +1,10 @@
-- name: Evaluate if Minio Stateful exists
-  when: minio_stateful|bool
+- name: Evaluate if Minio exists
   kubernetes.core.k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'
     validate_certs: false
     state: present
-    resource_definition: "{{ lookup('template', 'minio-stateful.yml.j2') }}"
-
-- name: Evaluate if Minio Stateless exists
-  when: not minio_stateful|bool
-  kubernetes.core.k8s:
-    api_key: '{{ token }}'
-    host: '{{ server }}'
-    validate_certs: false
-    state: present
-    resource_definition: "{{ lookup('template', 'minio-stateless.yml.j2') }}"
+    resource_definition: "{{ lookup('template', 'minio-template.yml.j2') }}"
 
 - name: Waiting for Minio instance to be running
   kubernetes.core.k8s_info:
@@ -42,19 +32,21 @@
   delay: 10
   until: my_output.rc == 0
 
-- name: List buckets
-  ansible.builtin.command: "mc ls tpa-minio"
-  ignore_errors: false
-  register: buckets_output
-  changed_when: buckets_output.rc != 0
-
 - name: Create Buckets
-  ansible.builtin.command: mc mb tpa-minio/{{ item }}
+  ansible.builtin.shell: |
+     mc mb tpa-minio/{{ item[0] }} --ignore-existing
+     mc policy download tpa-minio/{{ item[0] }}
+     mc event add tpa-minio/{{ item[0] }} arn:minio:sqs::{{ item[1] }}:kafka --event put --ignore-existing
   ignore_errors: false
   register: my_output
   changed_when: my_output.rc != 0
   loop:
-    - bombastic-default
-    - vexination-default
-    - v11y-default
-  when: buckets_output.stdout | length == 0
+    - ["bombastic-default", "BOMBASTIC"]
+    - ["vexination-default", "VEXINATION"]
+    - ["v11y-default", "V11Y"]
+
+- name: Restart Minio Service
+  ansible.builtin.command: mc admin service restart tpa-minio
+  ignore_errors: false
+  register: my_output
+  changed_when: my_output.rc != 0

@@ -20,11 +20,11 @@ storage:
 
 eventBus:
   type: kafka
-  bootstrapServers: cluster-kafka-bootstrap:9092
+  bootstrapServers: '{{ kafka_bootstrap_host }}:9092'
   config:
     securityProtocol: SASL_PLAINTEXT
     mechanism: SCRAM-SHA-512
-    username: tester
+    username: '{{ kafka_user_name }}'
     password:
       valueFrom:
         secretKeyRef:

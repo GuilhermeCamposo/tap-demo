@@ -1,0 +1,143 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: '{{ minio_pvc_name }}'
+  namespace: '{{ minio_project }}'
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: '{{ minio_pvc_size }}'
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: '{{ minio_project }}'
+spec:
+  ports:
+  - port: 9000
+    protocol: TCP
+    targetPort: 9000
+  selector:
+    app: minio
+  sessionAffinity: None
+  type: ClusterIP
+
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: minio
+  namespace: '{{ minio_project }}'
+spec:
+  port:
+    targetPort: 9000
+  to:
+    kind: Service
+    name: minio
+    weight: 100
+  tls:
+    termination: edge
+  wildcardPolicy: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: '{{ minio_project }}'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: '{{ minio_pvc_name }}'
+      containers:
+      - name: minio
+        image: "minio/minio:{{ minio_image_tag }}"
+        args:
+        - server
+        - /storage
+        env:
+        - name: MINIO_ROOT_USER
+          value: "{{ minio_key }}"
+        - name: MINIO_ROOT_PASSWORD
+          value: "{{ minio_secret }}"
+        - name: MINIO_REGION_NAME
+          value: "{{ minio_region }}"
+
+        - name: MINIO_NOTIFY_KAFKA_ENABLE_BOMBASTIC
+          value: "on"
+        - name: MINIO_NOTIFY_KAFKA_BROKERS_BOMBASTIC
+          value: '{{ kafka_bootstrap_host }}:9092'
+        - name: MINIO_NOTIFY_KAFKA_TOPIC_BOMBASTIC
+          value: "bombastic-stored-default"
+
+        - name: MINIO_NOTIFY_KAFKA_ENABLE_VEXINATION
+          value: "on"
+        - name: MINIO_NOTIFY_KAFKA_BROKERS_VEXINATION
+          value: '{{ kafka_bootstrap_host }}:9092'
+        - name: MINIO_NOTIFY_KAFKA_TOPIC_VEXINATION
+          value: "vexination-stored-default"
+
+        - name: MINIO_NOTIFY_KAFKA_ENABLE_V11Y
+          value: "on"
+        - name: MINIO_NOTIFY_KAFKA_BROKERS_V11Y
+          value: '{{ kafka_bootstrap_host }}:9092'
+        - name: MINIO_NOTIFY_KAFKA_TOPIC_V11Y
+          value: "v11y-stored-default"
+
+        - name: MINIO_NOTIFY_KAFKA_SASL_BOMBASTIC
+          value: "on"
+        - name: MINIO_NOTIFY_KAFKA_SASL_USERNAME_BOMBASTIC
+          value: "{{ kafka_user_name }}"
+        - name: MINIO_NOTIFY_KAFKA_SASL_PASSWORD_BOMBASTIC
+          valueFrom:
+            secretKeyRef:
+              name: kafka-user-credential
+              key: password
+        - name: MINIO_NOTIFY_KAFKA_SASL_MECHANISM_BOMBASTIC
+          value: "SHA512"
+
+        - name: MINIO_NOTIFY_KAFKA_SASL_VEXINATION
+          value: "on"
+        - name: MINIO_NOTIFY_KAFKA_SASL_USERNAME_VEXINATION
+          value: "{{ kafka_user_name }}"
+        - name: MINIO_NOTIFY_KAFKA_SASL_PASSWORD_VEXINATION
+          valueFrom:
+            secretKeyRef:
+              name: kafka-user-credential
+              key: password
+        - name: MINIO_NOTIFY_KAFKA_SASL_MECHANISM_VEXINATION
+          value: "SHA512"
+
+        - name: MINIO_NOTIFY_KAFKA_SASL_V11Y
+          value: "on"
+        - name: MINIO_NOTIFY_KAFKA_SASL_USERNAME_V11Y
+          value: "{{ kafka_user_name }}"
+        - name: MINIO_NOTIFY_KAFKA_SASL_PASSWORD_V11Y
+          valueFrom:
+            secretKeyRef:
+              name: kafka-user-credential
+              key: password
+        - name: MINIO_NOTIFY_KAFKA_SASL_MECHANISM_V11Y
+          value: "SHA512"
+
+        ports:
+        - containerPort: 9000
+        volumeMounts:
+        - name: storage
+          mountPath: "/storage"
