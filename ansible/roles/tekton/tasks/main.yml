@@ -1,5 +1,48 @@
-- name: Install Pipelines
-  ansible.builtin.include_tasks: install.yml
+- name: Check Pipelines Subscription
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    kind: Subscription
+    api_version: operators.coreos.com/v1alpha1
+    definition:
+      metadata:
+        name: openshift-pipelines-operator-rh
+        namespace: openshift-operators
+      spec:
+        installPlanApproval: Automatic
+        channel: pipelines-1.16
+        name: openshift-pipelines-operator-rh
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
 
-- name: Configure Pipelines
-  ansible.builtin.include_tasks: configuration.yml
+- name: Wait for Tekton operator to install
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: '{{ verify_tls }}'
+    api_version: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: tasks.tekton.dev
+  register: _crd
+  until: _crd.resources | list | length == 1
+  retries: 10
+  delay: 30
+
+- name: Wait for Tekton operator to install
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: openshift-operators
+    label_selectors:
+      - app = tekton-operator
+    field_selectors:
+      - status.phase=Running
+  register: r_tekton_pod
+  retries: 20
+  delay: 10
+  until: r_tekton_pod.resources | list | length == 1
