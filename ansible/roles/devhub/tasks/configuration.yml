@@ -15,16 +15,6 @@
     name: '{{ rhdh_project }}'
     state: present
 
-- name: Evaluate ArgoCD Application Namespace
-  kubernetes.core.k8s:
-    api_key: '{{ token }}'
-    host: '{{ server }}'
-    validate_certs: false
-    api_version: v1
-    kind: Namespace
-    name: 'rhtap'
-    state: present
-
 - name: Get ARGOCD openshift-gitops-cluster secret
   kubernetes.core.k8s_info:
     api_key: '{{ token }}'

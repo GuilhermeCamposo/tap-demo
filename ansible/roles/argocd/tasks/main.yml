@@ -1,7 +1,5 @@
 - name: Install GitOps
   ansible.builtin.include_tasks: installation.yml
-  when: not delete_demo
 
 - name: Configure GitOps
   ansible.builtin.include_tasks: configuration.yml
-  when: not delete_demo | bool

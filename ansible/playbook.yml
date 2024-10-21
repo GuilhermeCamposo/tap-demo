@@ -1,7 +1,6 @@
 - name: Install Trusted Application Pipeline
   hosts: localhost
   vars:
-    delete_demo: false
     verify_tls: false
     insecure_skip_tls_verify: true
 
