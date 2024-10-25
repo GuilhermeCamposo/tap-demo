@@ -13,17 +13,17 @@
     kafka_user_name: tester
     kafka_bootstrap_host: cluster-kafka-bootstrap
 
-    # TPA configuration
+# TPA configuration
     tpa_project: trusted-profile-analyzer
     tpa_walker_secret: walker_secret
     tpa_helm_version: 0.1.2
 
-    # Minio configuration
+# Minio configuration
     minio_project: '{{ tpa_project }}'
     minio_key: minio
     minio_secret: minio123
 
-    # Developer Hub Configuration
+# Developer Hub Configuration
     rhdh_project: rhdh
     rhdh_keycloak_realm: rhdh
     rhdh_keycloak_client_id: rhdh
@@ -37,12 +37,7 @@
       # - https://github.com/GcBackstageDemos/trusted-application-pipeline-templates/blob/my-version/showcase-templates.yaml
       - https://github.com/GcBackstageDemos/backstage-camel-templates/blob/main/templates.yaml
 
-    gitops_project: rhtap
-
-    # pipeline
-    pipeline_project: demo-tap-pipeline
-
-    # Devspaces Configuration
+# Devspaces Configuration
     devspaces_enabled: true
     acs_enabled: false
 
