@@ -8,6 +8,8 @@ data:
       - dynamic-plugins.default.yaml
     plugins:
       - disabled: false
+        package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic  
+      - disabled: false
         package: ./dynamic-plugins/dist/backstage-plugin-tech-radar    
       - disabled: false
         package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-backend-dynamic
@@ -16,17 +18,15 @@ data:
       - disabled: false
         package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
       - disabled: false
-        package: ./dynamic-plugins/dist/backstage-plugin-techdocs        
+        package: ./dynamic-plugins/dist/backstage-plugin-techdocs
       - disabled: false
-        package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-argo-cd-backend-dynamic
+        package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-argo-cd-backend-dynamic        
       - disabled: false
-        package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-argocd-dynamic
-      - disabled: true
-        package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-argo-cd
+        package: ./dynamic-plugins/dist/backstage-community-plugin-redhat-argocd        
       - disabled: false
         package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-utils-dynamic
       - disabled: false
-        package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-security-insights
+        package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-security-insights       
       - disabled: false
         package: ./dynamic-plugins/dist/janus-idp-backstage-plugin-keycloak-backend-dynamic
       - disabled: false
