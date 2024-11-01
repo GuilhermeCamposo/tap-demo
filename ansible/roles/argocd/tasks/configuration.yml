@@ -4,7 +4,10 @@
     host: '{{ server }}'
     validate_certs: false
     state: present
-    resource_definition: "{{ lookup('file', 'crb.yml') }}"
+    resource_definition: "{{ lookup('file', item) }}"
+  loop:
+    - 'prometheus-cr.yml'
+    - 'crb.yml'
 
 - name: Evaluate ArgoCD Instance
   kubernetes.core.k8s:
