@@ -61,33 +61,41 @@
     - name: Include Keycloak
       ansible.builtin.include_role:
         name: keycloak
+      tags: keycloak
 
     - name: Include ACS
       ansible.builtin.include_role:
         name: acs
       when: acs_enabled | bool
+      tags: acs
 
     - name: Include Tekton
       ansible.builtin.include_role:
         name: tekton
+      tags: tekton
 
     - name: Include ArgoCD
       ansible.builtin.include_role:
         name: argocd
+      tags: argocd
 
     - name: Include TAS
       ansible.builtin.include_role:
         name: tas
+      tags: tas
 
     - name: Include TPA
       ansible.builtin.include_role:
         name: tpa
+      tags: tpa
 
     - name: Include RHDH
       ansible.builtin.include_role:
         name: devhub
+      tags: devhub
 
     - name: Include DevSpaces
       ansible.builtin.include_role:
         name: devspaces
       when: devspaces_enabled | bool
+      tags: devspaces

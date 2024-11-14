@@ -56,3 +56,9 @@ You can load data from 2022 into TPA, instead of running the full job. You can d
 ----
 oc apply -f job.yml -n trusted-profile-analyzer
 ----
+
+To run the whole thing, just:
+
+----
+oc create job --from=cronjob/v11y-walker v11y-walker-now
+----
