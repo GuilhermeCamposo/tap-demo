@@ -114,5 +114,5 @@ spec:
       - ReadWriteOnce
       resources:
         requests:
-          storage: 10Gi
+          storage: {{ tpa_db_storage_size }}
       volumeMode: Filesystem

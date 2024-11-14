@@ -1,4 +1,4 @@
 minio_image_tag: RELEASE.2024-10-02T17-50-41Z-cpuv1
 minio_pvc_name: minio-pvc
 minio_region: eu-west-1
-minio_pvc_size: 10Gi
+minio_pvc_size: 40Gi

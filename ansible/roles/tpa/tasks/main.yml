@@ -23,7 +23,7 @@
     validate_certs: false
     state: present
     namespace: '{{ tpa_project }}'
-    resource_definition: "{{ lookup('file', 'postgresdb.yml') }}"
+    resource_definition: "{{ lookup('template', 'postgresdb.yml.j2') }}"
 
 - name: Waiting for Postgresdb instance to be running
   kubernetes.core.k8s_info:
@@ -82,7 +82,7 @@
   register: r_cmd
   changed_when: r_cmd.rc != 0
 
-#  I can't make helm plugin to work on my environments. Maybe one day...
+#  I can't make helm plugin work on my environments. Maybe one day...
 #
 # - name: Deploy redhat-trusted-profile-analyzer chart
 #   kubernetes.core.helm:
