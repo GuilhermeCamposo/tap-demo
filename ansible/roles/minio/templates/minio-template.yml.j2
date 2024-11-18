@@ -22,6 +22,11 @@ spec:
   - port: 9000
     protocol: TCP
     targetPort: 9000
+    name: api
+  - port: 9001
+    protocol: TCP
+    targetPort: 9001
+    name: console
   selector:
     app: minio
   sessionAffinity: None
@@ -35,7 +40,7 @@ metadata:
   namespace: '{{ minio_project }}'
 spec:
   port:
-    targetPort: 9000
+    targetPort: api
   to:
     kind: Service
     name: minio
@@ -43,6 +48,22 @@ spec:
   tls:
     termination: edge
   wildcardPolicy: None
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: minio-console
+  namespace: '{{ minio_project }}'
+spec:
+  port:
+    targetPort: console
+  to:
+    kind: Service
+    name: minio
+    weight: 100
+  tls:
+    termination: edge
+  wildcardPolicy: None  
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -71,6 +92,8 @@ spec:
         args:
         - server
         - /storage
+        - '--console-address'
+        - ':9001'
         env:
         - name: MINIO_ROOT_USER
           value: "{{ minio_key }}"
@@ -138,6 +161,11 @@ spec:
 
         ports:
         - containerPort: 9000
+          protocol: TCP
+          name: api
+        - containerPort: 9001
+          protocol: TCP
+          name: console
         volumeMounts:
         - name: storage
           mountPath: "/storage"
