@@ -17,7 +17,7 @@
 | Parameter  | Example Value                                      | Definition
 | token      | sha256~vFanQbthlPKfsaldJT3bdLXIyEkd7ypO_XPygY1DNtQ | access token for a user with cluster-admin privileges
 | server     | https://api.mycluster.domain.com:6443              | OpenShift cluster API URL
-| github_pat | longString                                         | Personal Access Token used to download and publish content on Github. For information regarding scope, refer to the https://backstage.io/docs/integrations/github/locations[docs]
+| github_pat | longString                                         | Personal Access Token used to download and publish content on Github. Required for Developer Hub deployment only. For information regarding scope, refer to the https://backstage.io/docs/integrations/github/locations[docs]
 |=======================
 
 ===  How to run the playbook
@@ -26,15 +26,26 @@
 ansible-playbook -e token=${token} -e server=${server} -e github_pat=${github_pat}  playbook.yml
 ----
 
+=== Running parts of the playbook
+
+This playbook has https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html[tags] configured. To run a single role or selected roles you can:
+
+----
+ansible-playbook -e token=${token} -e server=${server} --tags "keycloak"  playbook.yml
+----
+
 == Testing
 
-=== Cosign
+=== Trusted Artifact Signer with Cosign
 
-Before testing cosig, first, create a new user in Keycloak. You will need it for authentication.
+Before testing Cosign, you need a Keycloak user. The playbook configures a `trusted-artifact-signer` realm with the `admin` user. The password is `password`. You can create new users if you want.
+
+* Configure your shell environment for doing container image signing and verifying
 
 ----
 export TUF_URL=$(oc get tuf -o jsonpath='{.items[0].status.url}' -n trusted-artifact-signer)
-export OIDC_ISSUER_URL=https://$(oc get route keycloak-ingress-xsv9t -n keycloak-system | tail -n 1 | awk '{print $2}')/realms/trusted-artifact-signer
+export KEYCLOAK_HOST=$(oc get route -l app=keycloak -n keycloak-system -o jsonpath='{.items[0].spec.host}')
+export OIDC_ISSUER_URL=https://$KEYCLOAK_HOST/realms/trusted-artifact-signer
 export COSIGN_FULCIO_URL=$(oc get fulcio -o jsonpath='{.items[0].status.url}' -n trusted-artifact-signer)
 export COSIGN_REKOR_URL=$(oc get rekor -o jsonpath='{.items[0].status.url}' -n trusted-artifact-signer)
 export COSIGN_MIRROR=$TUF_URL
@@ -48,6 +59,33 @@ export SIGSTORE_OIDC_ISSUER=$COSIGN_OIDC_ISSUER
 export SIGSTORE_REKOR_URL=$COSIGN_REKOR_URL
 export REKOR_REKOR_SERVER=$COSIGN_REKOR_URL
 ----
+
+* Initialize The Update Framework (TUF) system
+
+----
+cosign initialize
+----
+
+* Create an image to be signed
+
+----
+echo "FROM scratch" > ./tmp.Dockerfile
+podman build . -f ./tmp.Dockerfile -t ttl.sh/rhtas/test-image:1h
+podman push ttl.sh/rhtas/test-image:1h
+----
+
+
+* Sign the image
+
+----
+cosign sign -y ttl.sh/rhtas/test-image:1h
+----
+
+* You can also verify the image signature
+
+---
+cosign verify --certificate-identity=admin@demo.com ttl.sh/rhtas/test-image:1h
+---
 
 === Loading CVE and Advosories database
 
