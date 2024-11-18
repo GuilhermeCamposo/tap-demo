@@ -49,53 +49,72 @@
       when:
         - (server is not defined) or (token is not defined) or (server is none) or (token is none)
       ignore_errors: false
+      tags: [keycloak, acs, tekton, argocd, tas, tpa, rhdh, devspaces]
 
     - name: Set domain
       ansible.builtin.set_fact:
         domain: "{{ server | regex_replace('https://api.') | regex_replace(':6443') }}"
+      tags: [keycloak, acs, tekton, argocd, tas, tpa, rhdh, devspaces]
 
     - name: Set Subdomain
       ansible.builtin.set_fact:
         route_subdomain: "apps.{{ domain }}"
+      tags: [keycloak, acs, tekton, argocd, tas, tpa, rhdh, devspaces]
 
     - name: Include Keycloak
       ansible.builtin.include_role:
         name: keycloak
+        apply:
+          tags: keycloak
       tags: keycloak
 
     - name: Include ACS
       ansible.builtin.include_role:
         name: acs
+        apply:
+          tags: acs
       when: acs_enabled | bool
       tags: acs
 
     - name: Include Tekton
       ansible.builtin.include_role:
         name: tekton
+        apply:
+          tags: tekton
       tags: tekton
 
     - name: Include ArgoCD
       ansible.builtin.include_role:
         name: argocd
+        apply:
+          tags: argocd
       tags: argocd
 
     - name: Include TAS
       ansible.builtin.include_role:
         name: tas
+        apply:
+          tags: tas
       tags: tas
 
     - name: Include TPA
       ansible.builtin.include_role:
         name: tpa
+        apply:
+          tags: tpa
       tags: tpa
 
     - name: Include RHDH
       ansible.builtin.include_role:
         name: devhub
+        apply:
+          tags: devhub
       tags: devhub
 
     - name: Include DevSpaces
       ansible.builtin.include_role:
         name: devspaces
+        apply:
+          tags: devspaces
       when: devspaces_enabled | bool
       tags: devspaces
