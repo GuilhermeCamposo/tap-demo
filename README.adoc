@@ -83,9 +83,9 @@ cosign sign -y ttl.sh/rhtas/test-image:1h
 
 * You can also verify the image signature
 
----
+----
 cosign verify --certificate-identity=admin@demo.com ttl.sh/rhtas/test-image:1h
----
+----
 
 === Loading CVE and Advosories database
 
