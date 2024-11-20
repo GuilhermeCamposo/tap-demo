@@ -38,10 +38,6 @@
       # - https://github.com/GcBackstageDemos/trusted-application-pipeline-templates/blob/my-version/showcase-templates.yaml
       - https://github.com/GcBackstageDemos/backstage-camel-templates/blob/main/templates.yaml
 
-# Devspaces Configuration
-    devspaces_enabled: true
-    acs_enabled: false
-
   tasks:
     - name: Check Required Parameters
       ansible.builtin.fail:
@@ -49,46 +45,45 @@
       when:
         - (server is not defined) or (token is not defined) or (server is none) or (token is none)
       ignore_errors: false
-      tags: [keycloak, acs, tekton, argocd, tas, tpa, rhdh, devspaces]
+      tags: [keycloak, acs, tekton, argocd, tas, tpa, devhub, devspaces]
 
     - name: Set domain
       ansible.builtin.set_fact:
         domain: "{{ server | regex_replace('https://api.') | regex_replace(':6443') }}"
-      tags: [keycloak, acs, tekton, argocd, tas, tpa, rhdh, devspaces]
+      tags: [keycloak, acs, tekton, argocd, tas, tpa, devhub, devspaces]
 
     - name: Set Subdomain
       ansible.builtin.set_fact:
         route_subdomain: "apps.{{ domain }}"
-      tags: [keycloak, acs, tekton, argocd, tas, tpa, rhdh, devspaces]
+      tags: [keycloak, acs, tekton, argocd, tas, tpa, devhub, devspaces]
 
     - name: Include Keycloak
       ansible.builtin.include_role:
         name: keycloak
         apply:
-          tags: keycloak
-      tags: keycloak
+          tags: [keycloak, tas, tpa, devhub]
+      tags: [keycloak, tas, tpa, devhub]
 
     - name: Include ACS
       ansible.builtin.include_role:
         name: acs
         apply:
           tags: acs
-      when: acs_enabled | bool
       tags: acs
 
     - name: Include Tekton
       ansible.builtin.include_role:
         name: tekton
         apply:
-          tags: tekton
-      tags: tekton
+          tags: [tekton, devhub]
+      tags: [tekton, devhub]
 
     - name: Include ArgoCD
       ansible.builtin.include_role:
         name: argocd
         apply:
-          tags: argocd
-      tags: argocd
+          tags: [argocd, devhub]
+      tags: [argocd, devhub]
 
     - name: Include TAS
       ansible.builtin.include_role:
@@ -116,5 +111,4 @@
         name: devspaces
         apply:
           tags: devspaces
-      when: devspaces_enabled | bool
       tags: devspaces
