@@ -9,7 +9,11 @@ metadata:
     app.kubernetes.io/part-of: trusted-artifact-signer
   name: securesign-sample
 spec:
-  ctlog: null
+  ctlog: 
+    monitoring:
+      enabled: true
+    trillian:
+      port: 8091
   fulcio:
     certificate:
       commonName: fulcio.hostname
