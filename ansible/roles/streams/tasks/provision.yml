@@ -39,7 +39,7 @@
         name: amq-streams
         namespace: '{{ kafka_project }}'
       spec:
-        channel: stable
+        channel: amq-streams-2.8.x
         installPlanApproval: Automatic
         name: amq-streams
         source: redhat-operators

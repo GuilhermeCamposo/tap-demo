@@ -6,7 +6,18 @@
 - oc client >= 4.16
 - Minio client(https://min.io/docs/minio/linux/reference/minio-mc.html[mc]) in your local $PATH 
 - Helm client
+- Ansible With Kubernets module (https://docs.ansible.com/ansible/latest/collections/kubernetes/core/k8s_module.html#requirements[requirements])
 
+== What is available?
+
+. Trusted Profile Analyzer 1.2
+.. Streams for Apache Kafka 2.8
+.. MinIO 
+. Trusted Application Signer 1.1
+. Developer Hub 1.4
+. Red Hat build of Keycloak v24
+. Tekton Pipelines 1.17
+. ArgoCD GitOps 1.15
 
 == TAP Installation
 
