@@ -109,5 +109,5 @@ oc apply -f job.yml -n trusted-profile-analyzer
 To run the whole thing, just:
 
 ----
-oc create job --from=cronjob/v11y-walker v11y-walker-now
+oc create job --from=cronjob/v11y-walker v11y-walker-now -n trusted-profile-analyzer
 ----

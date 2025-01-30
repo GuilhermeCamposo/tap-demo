@@ -16,7 +16,7 @@
 # TPA configuration
     tpa_project: trusted-profile-analyzer
     tpa_walker_secret: walker_secret
-    tpa_helm_version: 0.1.2
+    tpa_helm_version: 0.2.2
     tpa_db_storage_size: 40Gi
 
 # Minio configuration
