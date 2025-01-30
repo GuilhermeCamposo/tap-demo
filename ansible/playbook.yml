@@ -12,7 +12,8 @@
     kafka_project: '{{ tpa_project }}'
     kafka_user_name: tester
     kafka_bootstrap_host: cluster-kafka-bootstrap
-
+# TAS Configuratio
+    tas_channel: stable-v1.1
 # TPA configuration
     tpa_project: trusted-profile-analyzer
     tpa_walker_secret: walker_secret

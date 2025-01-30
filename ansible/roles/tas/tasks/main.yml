@@ -11,7 +11,7 @@
         name: rhtas-operator
         namespace: openshift-operators
       spec:
-        channel: stable
+        channel: '{{ tas_channel }}'
         installPlanApproval: Automatic
         name: rhtas-operator
         source: redhat-operators
