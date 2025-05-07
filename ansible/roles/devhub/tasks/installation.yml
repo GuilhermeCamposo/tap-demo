@@ -35,7 +35,7 @@
         name: rhdh
         namespace: rhdh-operator
       spec:
-        channel: fast-1.4
+        channel: fast-1.5
         installPlanApproval: Automatic
         name: rhdh
         source: redhat-operators
