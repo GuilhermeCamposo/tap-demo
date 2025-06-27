@@ -11,7 +11,7 @@ ingress:
 storage:
   type: s3
   bucket: {{ s3_bucket_name }}
-  endpoint: minio-{{ tpa_project }}.apps.{{ domain }}:443
+  region: http://minio:9000
   accessKey:
     valueFrom:
       secretKeyRef:
@@ -97,7 +97,7 @@ modules:
   createDatabase:
     enabled: true
   migrateDatabase:
-    enabled: false
+    enabled: true
   createImporters:
     enabled: true
     importers:
