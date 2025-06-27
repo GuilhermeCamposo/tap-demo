@@ -34,16 +34,11 @@
 
 - name: Create Buckets
   ansible.builtin.shell: |
-     mc mb tpa-minio/{{ item[0] }} --ignore-existing
-     mc policy download tpa-minio/{{ item[0] }}
-     mc event add tpa-minio/{{ item[0] }} arn:minio:sqs::{{ item[1] }}:kafka --event put --ignore-existing
+     mc mb tpa-minio/{{ s3_bucket_name }} --ignore-existing
+     mc policy download tpa-minio/{{ s3_bucket_name }}
   ignore_errors: false
   register: my_output
   changed_when: my_output.rc != 0
-  loop:
-    - ["bombastic-default", "BOMBASTIC"]
-    - ["vexination-default", "VEXINATION"]
-    - ["v11y-default", "V11Y"]
 
 - name: Restart Minio Service
   ansible.builtin.command: mc admin service restart tpa-minio

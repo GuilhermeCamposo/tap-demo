@@ -1,123 +1,132 @@
 appDomain: .{{ route_subdomain }}
+
 authenticator:
   type: keycloak
+
 tracing: {}
+
 ingress:
   className: openshift-default
 
 storage:
- endpoint: minio-{{ tpa_project }}.apps.{{ domain }}:443
- accessKey:
-   valueFrom:
-     secretKeyRef:
-       name: s3-credentials
-       key: user
- secretKey:
-   valueFrom:
-     secretKeyRef:
-       name: s3-credentials
-       key: password
-
-eventBus:
-  type: kafka
-  bootstrapServers: '{{ kafka_bootstrap_host }}:9092'
-  config:
-    securityProtocol: SASL_PLAINTEXT
-    mechanism: SCRAM-SHA-512
-    username: '{{ kafka_user_name }}'
-    password:
-      valueFrom:
-        secretKeyRef:
-          name: kafka-user-credential
-          key: password
+  type: s3
+  bucket: {{ s3_bucket_name }}
+  endpoint: minio-{{ tpa_project }}.apps.{{ domain }}:443
+  accessKey:
+    valueFrom:
+      secretKeyRef:
+        name: s3-credentials
+        key: user
+  secretKey:
+    valueFrom:
+      secretKeyRef:
+        name: s3-credentials
+        key: password
 
 oidc:
   issuerUrl: https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/realms/trusted-artifact-signer
   clients:
-   frontend:
-     clientId: frontend
-   walker:
-     clientId: walker
-     clientSecret:
-       valueFrom:
-         secretKeyRef:
-           name: oidc-walker
-           key: client-secret
+    frontend:
+      clientId: frontend
+    cli:
+      clientId: walker
+      clientSecret:
+        valueFrom:
+          secretKeyRef:
+            name: oidc-walker
+            key: client-secret
 
-bombastic:
- bucket: bombastic-default
- topics:
-   failed: bombastic-failed-default
-   indexed: bombastic-indexed-default
-   stored: bombastic-stored-default
+database:
+  sslMode: disable
+  host:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-credentials
+        key: db.host
+  port:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-credentials
+        key: db.port
+  name:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-credentials
+        key: db.name
+  username:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-credentials
+        key: db.user
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-credentials
+        key: db.password
 
-vexination:
- bucket: vexination-default
- topics:
-   failed: vexination-failed-default
-   indexed: vexination-indexed-default
-   stored: vexination-stored-default
+createDatabase:
+  name:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-admin-credentials
+        key: db.name
+  username:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-admin-credentials
+        key: db.user
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-admin-credentials
+        key: db.password
 
-v11y:
- bucket: v11y-default
- topics:
-   failed: v11y-failed-default
-   indexed: v11y-indexed-default
-   stored: v11y-stored-default
+migrateDatabase:
+  username:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-admin-credentials
+        key: db.user
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-admin-credentials
+        key: db.password
 
-guac:
- database:
-   sslMode: disable
-   name:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-credentials
-         key: db.name
-   host:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-credentials
-         key: db.host
-   port:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-credentials
-         key: db.port
-   username:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-credentials
-         key: db.user
-   password:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-credentials
-         key: db.password
-
- initDatabase:
-   sslMode: disable
-   name:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-admin-credentials
-         key: db.name
-   host:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-admin-credentials
-         key: db.host
-   port:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-admin-credentials
-         key: db.port
-   username:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-admin-credentials
-         key: db.user
-   password:
-     valueFrom:
-       secretKeyRef:
-         name: postgresql-admin-credentials
-         key: db.password
+modules:
+  createDatabase:
+    enabled: true
+  migrateDatabase:
+    enabled: false
+  createImporters:
+    enabled: true
+    importers:
+      redhat-sboms:
+        sbom:
+          description: All Red Hat SBOMs
+          period: 1d
+          source: https://access.redhat.com/security/data/sbom/beta/
+          keys:
+            - https://access.redhat.com/security/data/97f5eac4.txt#77E79ABE93673533ED09EBE2DCE3823597F5EAC4
+          disabled: true
+          fetchRetries: 50
+      redhat-csaf:
+        csaf:
+          description: All Red Hat CSAF data
+          period: 1d
+          source: redhat.com
+          disabled: true
+          fetchRetries: 50
+      cve:
+        cve:
+          description: CVE list v5
+          period: 1d
+          source: https://github.com/CVEProject/cvelistV5
+          disabled: false
+      osv-github:
+        osv:
+          description: GitHub Advisory Database
+          period: 1d
+          source: https://github.com/github/advisory-database
+          path: advisories
+          disabled: false             

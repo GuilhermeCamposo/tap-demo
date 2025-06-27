@@ -7,5 +7,5 @@
     namespace: '{{ keycloak_project }}'
     resource_definition: "{{ lookup('template', item) }}"
   loop:
-    - rhdh-realm.yml.j2 
-    - tas-realm.yml.j2 
+    - rhdh-realm.yml.j2
+    - tas-realm.yml.j2

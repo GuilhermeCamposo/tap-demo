@@ -17,13 +17,14 @@
 # TPA configuration
     tpa_project: trusted-profile-analyzer
     tpa_walker_secret: walker_secret
-    tpa_helm_version: 0.2.2
+    tpa_helm_version: 1.0.2
     tpa_db_storage_size: 40Gi
 
 # Minio configuration
     minio_project: '{{ tpa_project }}'
     minio_key: minio
     minio_secret: minio123
+    s3_bucket_name: trustify-001
 
 # Developer Hub Configuration
     rhdh_project: rhdh
