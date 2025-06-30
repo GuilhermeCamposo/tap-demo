@@ -88,7 +88,6 @@
 #     validate_certs: false
 #     name: redhat-trusted-profile-analyzer
 #     chart_ref: openshift-helm-charts/redhat-trusted-profile-analyzer
-#     chart_version: '0.1.1'
+#     chart_version: '{{ tpa_helm_version }}'
 #     release_namespace: '{{ tpa_project }}'
-#     update_repo_cache: false
 #     values: "{{ lookup('template', 'values-rhtpa.yaml.j2') | from_yaml }}"

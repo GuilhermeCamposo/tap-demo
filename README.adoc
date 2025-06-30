@@ -10,7 +10,7 @@
 
 == What is available?
 
-. Trusted Profile Analyzer 1.2
+. Trusted Profile Analyzer 2.0
 .. Streams for Apache Kafka 2.8
 .. MinIO 
 . Trusted Application Signer 1.1
