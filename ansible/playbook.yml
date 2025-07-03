@@ -16,7 +16,7 @@
     tas_channel: stable-v1.1
 # TPA configuration
     tpa_project: trusted-profile-analyzer
-    tpa_walker_secret: walker_secret
+    tpa_cli_secret: walker_secret
     tpa_helm_version: 1.0.2
     tpa_db_storage_size: 40Gi
 

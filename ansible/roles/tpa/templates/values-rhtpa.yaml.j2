@@ -24,16 +24,16 @@ storage:
         key: password
 
 oidc:
-  issuerUrl: https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/realms/trusted-artifact-signer
+  issuerUrl: https://keycloak-{{ keycloak_project }}.{{ route_subdomain }}/realms/trusted-profile-analyzer
   clients:
     frontend:
       clientId: frontend
     cli:
-      clientId: walker
+      clientId: cli
       clientSecret:
         valueFrom:
           secretKeyRef:
-            name: oidc-walker
+            name: oidc-cli
             key: client-secret
 
 database:

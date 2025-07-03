@@ -9,3 +9,4 @@
   loop:
     - rhdh-realm.yml.j2
     - tas-realm.yml.j2
+    - tpa-realm.yml.j2
