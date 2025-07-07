@@ -29,6 +29,8 @@
 | token      | sha256~vFanQbthlPKfsaldJT3bdLXIyEkd7ypO_XPygY1DNtQ | access token for a user with cluster-admin privileges
 | server     | https://api.mycluster.domain.com:6443              | OpenShift cluster API URL
 | github_pat | longString                                         | Personal Access Token used to download and publish content on Github. Required for Developer Hub deployment only. For information regarding scope, refer to the https://backstage.io/docs/integrations/github/locations[docs]
+| aws_ec2_access_key    | longStringOfCharacters | AWS EC2 Access Key. Required for TPA Only
+| aws_ec2_secret_key    | longStringOfCharacters | AWS EC2 Secret Key. Required for TPA Only
 |=======================
 
 ===  How to run the playbook
@@ -42,7 +44,7 @@ ansible-playbook -e token=${token} -e server=${server} -e github_pat=${github_pa
 This playbook has https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html[tags] configured. To run a single role or selected roles you can:
 
 ----
-ansible-playbook -e token=${token} -e server=${server} --tags "keycloak"  playbook.yml
+ansible-playbook -e token=${token} -e server=${server} -e aws_ec2_access_key=${aws_ec2_access_key} -e aws_ec2_secret_key=${aws_ec2_secret_key} --tags "tpa"  playbook.yml
 ----
 
 == Testing

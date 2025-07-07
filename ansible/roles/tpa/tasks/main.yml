@@ -8,9 +8,36 @@
     name: '{{ tpa_project }}'
     state: present
 
-- name: Include Minio
-  ansible.builtin.include_role:
-    name: minio
+- name: Check Required Parameters - aws_ec2_access_key
+  ansible.builtin.fail:
+    msg: "This playbook requires 'aws_ec2_access_key' to be defined"
+  when:
+    - (aws_ec2_access_key is undefined)  or (aws_ec2_access_key | length == 0)
+  ignore_errors: false
+
+- name: Check Required Parameters - aws_ec2_secret_key
+  ansible.builtin.fail:
+    msg: "This playbook requires 'aws_ec2_secret_key' to be defined"
+  when:
+    - (aws_ec2_secret_key is undefined)  or (aws_ec2_secret_key | length == 0)
+  ignore_errors: false
+
+- name: Set Bucket Name
+  ansible.builtin.set_fact:
+    s3_bucket_name: "trustify-{{ lookup('community.general.random_string') }}"
+
+# currently Rust AWS S3 SDK does not work with Minio
+# - name: Include Minio
+#   ansible.builtin.include_role:
+#     name: minio
+
+- name: Check S3 bucket
+  amazon.aws.s3_bucket:
+    aws_access_key: "{{ aws_ec2_access_key }}"
+    aws_secret_key: "{{ aws_ec2_secret_key }}"
+    region: "{{ aws_region }}"
+    name: "{{ s3_bucket_name }}"
+    state: present
 
 - name: Evaluate Postgresdb instance
   kubernetes.core.k8s:

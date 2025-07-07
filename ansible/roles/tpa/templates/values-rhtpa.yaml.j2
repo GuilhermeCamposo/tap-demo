@@ -11,7 +11,7 @@ ingress:
 storage:
   type: s3
   bucket: {{ s3_bucket_name }}
-  region: http://minio:9000
+  region: {{ aws_region }}
   accessKey:
     valueFrom:
       secretKeyRef:

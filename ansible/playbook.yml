@@ -24,7 +24,7 @@
     minio_project: '{{ tpa_project }}'
     minio_key: minio
     minio_secret: minio123
-    s3_bucket_name: trustify-001
+    aws_region: us-east-2
 
 # Developer Hub Configuration
     rhdh_project: rhdh
