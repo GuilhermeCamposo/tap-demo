@@ -11,9 +11,7 @@
 == What is available?
 
 . Trusted Profile Analyzer 2.0
-.. Streams for Apache Kafka 2.8
-.. MinIO 
-. Trusted Application Signer 1.1
+. Trusted Application Signer 1.2
 . Developer Hub 1.6
 . Red Hat build of Keycloak v26
 . Tekton Pipelines 1.17

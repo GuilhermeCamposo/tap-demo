@@ -1,4 +1,3 @@
 tpa_project: trusted-profile-analyzer
-tpa_cli_secret: cli_secret
 tpa_helm_version: 1.0.2
 tpa_db_storage_size: 40Gi

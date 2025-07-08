@@ -4,6 +4,9 @@
     verify_tls: false
     insecure_skip_tls_verify: true
 
+    tpa_cli_secret: cli_secret
+    keycloak_project: keycloak-system
+
 # S3 Configuration
     aws_region: us-east-2
 

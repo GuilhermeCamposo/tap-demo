@@ -1,3 +1,2 @@
-keycloak_project: keycloak-system
 keycloak_user_username: admin
 keycloak_user_password: password
