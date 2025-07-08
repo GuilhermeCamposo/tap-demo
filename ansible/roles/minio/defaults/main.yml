@@ -2,3 +2,7 @@ minio_image_tag: RELEASE.2025-06-13T11-33-47Z-cpuv1
 minio_pvc_name: minio-pvc
 minio_region: eu-east-1
 minio_pvc_size: 40Gi
+
+minio_project: '{{ tpa_project }}'
+minio_key: minio
+minio_secret: minio123

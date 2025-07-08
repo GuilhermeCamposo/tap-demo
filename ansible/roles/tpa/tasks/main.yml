@@ -24,7 +24,11 @@
 
 - name: Set Bucket Name
   ansible.builtin.set_fact:
-    s3_bucket_name: "trustify-{{ lookup('community.general.random_string') }}"
+    s3_bucket_name: "trustify-{{ lookup('community.general.random_string', special=false, upper=false) }}"
+
+- name: Print Bucket Name
+  ansible.builtin.debug:
+    var: s3_bucket_name
 
 # currently Rust AWS S3 SDK does not work with Minio
 # - name: Include Minio

@@ -4,26 +4,7 @@
     verify_tls: false
     insecure_skip_tls_verify: true
 
-    keycloak_project: keycloak-system
-    keycloak_tas_realm_name: trusted-artifact-signer
-    keycloak_user_username: admin
-    keycloak_user_password: password
-
-    kafka_project: '{{ tpa_project }}'
-    kafka_user_name: tester
-    kafka_bootstrap_host: cluster-kafka-bootstrap
-# TAS Configuratio
-    tas_channel: stable-v1.1
-# TPA configuration
-    tpa_project: trusted-profile-analyzer
-    tpa_cli_secret: walker_secret
-    tpa_helm_version: 1.0.2
-    tpa_db_storage_size: 40Gi
-
-# Minio configuration
-    minio_project: '{{ tpa_project }}'
-    minio_key: minio
-    minio_secret: minio123
+# S3 Configuration
     aws_region: us-east-2
 
 # Developer Hub Configuration
