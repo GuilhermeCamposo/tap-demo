@@ -5,12 +5,12 @@ metadata:
 data:
   app-config-rhdh.yaml: |
     app:
-      baseUrl: https://backstage-developer-hub-{{ rhdh_ns }}.{{ route_subdomain }}
+      baseUrl: https://backstage-developer-hub-{{ rhdh_project }}.{{ route_subdomain }}
     backend:
       auth:
         keys:
           - secret: "${BACKEND_SECRET}"
-      baseUrl: https://backstage-developer-hub-{{ rhdh_ns }}.{{ route_subdomain }}
+      baseUrl: https://backstage-developer-hub-{{ rhdh_project }}.{{ route_subdomain }}
       cors:
         credentials: true
         methods:
@@ -18,7 +18,7 @@ data:
         - POST
         - PUT
         - DELETE
-        origin: https://backstage-developer-hub-{{ rhdh_ns }}.{{ route_subdomain }}
+        origin: https://backstage-developer-hub-{{ rhdh_project }}.{{ route_subdomain }}
     auth:
       environment: production
       session:
