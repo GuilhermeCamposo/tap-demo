@@ -43,6 +43,10 @@ spec:
       labels:
         app: postgresql-db
     spec:
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
       containers:
       - env:
         - name: POSTGRESQL_USER
@@ -92,6 +96,8 @@ spec:
         volumeMounts:
         - mountPath: /var/lib/pgsql/data
           name: data
+        - name: dshm
+          mountPath: /dev/shm
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
