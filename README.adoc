@@ -97,17 +97,3 @@ cosign sign -y ttl.sh/rhtas/test-image:1h
 ----
 cosign verify --certificate-identity=admin@demo.com ttl.sh/rhtas/test-image:1h
 ----
-
-=== Loading CVE and Advosories database
-
-You can load data from 2022 into TPA, instead of running the full job. You can do it by executing the following Job. 
-
-----
-oc apply -f job.yml -n trusted-profile-analyzer
-----
-
-To run the whole thing, just:
-
-----
-oc create job --from=cronjob/v11y-walker v11y-walker-now -n trusted-profile-analyzer
-----

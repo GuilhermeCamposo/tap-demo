@@ -1,3 +1,4 @@
 tpa_project: trusted-profile-analyzer
 tpa_helm_version: 1.0.2
 tpa_db_storage_size: 40Gi
+tpa_postgres_img: registry.redhat.io/rhel9/postgresql-16:latest
