@@ -14,17 +14,11 @@ data:
       - disabled: false
         package: ./dynamic-plugins/dist/backstage-plugin-kubernetes
       - disabled: false
-        package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
-      - disabled: false
-        package: ./dynamic-plugins/dist/backstage-plugin-techdocs
-      - disabled: false
         package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-argo-cd-backend-dynamic   
       - disabled: false
         package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-argocd-dynamic                    
       - disabled: false
         package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-utils-dynamic
-      - disabled: false
-        package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-security-insights
       - disabled: false
         package: ./dynamic-plugins/dist/backstage-community-plugin-redhat-argocd                
       - disabled: false
