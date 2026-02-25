@@ -2,16 +2,14 @@
 
 == Requirements
 
-- OCP 4.18
-- oc client >= 4.18
-- Minio client(https://min.io/docs/minio/linux/reference/minio-mc.html[mc]) in your local $PATH 
-- Helm client
-- Ansible With Kubernets module (https://docs.ansible.com/ansible/latest/collections/kubernetes/core/k8s_module.html#requirements[requirements])
+- OCP >= 4.20
+- oc client >= 4.20
+- Ansible with Kubernetes module (https://docs.ansible.com/ansible/latest/collections/kubernetes/core/k8s_module.html#requirements[requirements])
 
 == What is available?
 
 . Trusted Profile Analyzer 2.2
-. Trusted Application Signer 1.2
+. Trusted Artifact Signer 1.3
 . Developer Hub 1.7
 . Red Hat build of Keycloak v26
 . Tekton Pipelines 1.17
