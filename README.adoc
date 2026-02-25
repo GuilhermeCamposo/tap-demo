@@ -10,9 +10,9 @@
 
 == What is available?
 
-. Trusted Profile Analyzer 2.0
+. Trusted Profile Analyzer 2.2
 . Trusted Application Signer 1.2
-. Developer Hub 1.6
+. Developer Hub 1.7
 . Red Hat build of Keycloak v26
 . Tekton Pipelines 1.17
 . ArgoCD GitOps 1.15
@@ -42,7 +42,7 @@ ansible-playbook -e token=${token} -e server=${server} -e github_pat=${github_pa
 This playbook has https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html[tags] configured. To run a single role or selected roles you can:
 
 ----
-ansible-playbook -e token=${token} -e server=${server} -e aws_ec2_access_key=${aws_ec2_access_key} -e aws_ec2_secret_key=${aws_ec2_secret_key} --tags "tpa"  playbook.yml
+ansible-playbook -e token=${token} -e server=${server} -e aws_ec2_access_key=${AWS_ACCESS_KEY_ID} -e aws_ec2_secret_key=${AWS_SECRET_ACCESS_KEY} --tags "tpa"  playbook.yml
 ----
 
 == Testing
