@@ -12,7 +12,7 @@
 . Trusted Artifact Signer 1.3
 . Developer Hub 1.7
 . Red Hat build of Keycloak v26
-. Tekton Pipelines 1.17
+. Tekton Pipelines 1.21
 . ArgoCD GitOps 1.15
 
 == TAP Installation
