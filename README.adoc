@@ -13,7 +13,9 @@
 . Developer Hub 1.7
 . Red Hat build of Keycloak v26
 . Tekton Pipelines 1.21
-. ArgoCD GitOps 1.15
+. ArgoCD GitOps 1.19
+. Advanced Cluster Security
+. Devspaces
 
 == TAP Installation
 
