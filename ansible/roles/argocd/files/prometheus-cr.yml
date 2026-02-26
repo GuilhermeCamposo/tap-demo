@@ -7,6 +7,7 @@ rules:
       - create
       - get
       - delete
+      - patch
     apiGroups:
       - monitoring.coreos.com
     resources:

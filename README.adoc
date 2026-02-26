@@ -15,7 +15,7 @@
 . Tekton Pipelines 1.21
 . ArgoCD GitOps 1.19
 . Advanced Cluster Security
-. Devspaces
+. Devspaces - stable channel - last tested with 3.26.x
 
 == TAP Installation
 
@@ -26,9 +26,9 @@
 | Parameter  | Example Value                                      | Definition
 | token      | sha256~vFanQbthlPKfsaldJT3bdLXIyEkd7ypO_XPygY1DNtQ | access token for a user with cluster-admin privileges
 | server     | https://api.mycluster.domain.com:6443              | OpenShift cluster API URL
-| github_pat | longString                                         | Personal Access Token used to download and publish content on Github. Required for Developer Hub deployment only. For information regarding scope, refer to the https://backstage.io/docs/integrations/github/locations[docs]
-| aws_ec2_access_key    | longStringOfCharacters | AWS EC2 Access Key. Required for TPA Only
-| aws_ec2_secret_key    | longStringOfCharacters | AWS EC2 Secret Key. Required for TPA Only
+| github_pat | longString                                         | Personal Access Token used to download and publish content on Github. *Required for Developer Hub* deployment only. For information regarding scope, refer to the https://backstage.io/docs/integrations/github/locations[docs]
+| aws_ec2_access_key    | longStringOfCharacters | AWS EC2 Access Key. *Required for TPA* Only
+| aws_ec2_secret_key    | longStringOfCharacters | AWS EC2 Secret Key. *Required for TPA* Only
 |=======================
 
 ===  How to run the playbook
