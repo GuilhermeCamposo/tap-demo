@@ -46,6 +46,14 @@
     namespace: '{{ rhdh_project }}'
     state: present
 
+- name: Evaluate RHDH CR
+  kubernetes.core.k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    resource_definition: "{{ lookup('file', 'read-only-permissions.yml') }}"
+
 - name: Evaluate RHDH CRB
   kubernetes.core.k8s:
     api_key: '{{ token }}'
