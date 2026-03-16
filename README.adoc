@@ -10,7 +10,7 @@
 
 . Trusted Profile Analyzer 2.2
 . Trusted Artifact Signer 1.3
-. Developer Hub 1.7
+. Developer Hub 1.9
 . Red Hat build of Keycloak v26
 . Tekton Pipelines 1.21
 . ArgoCD GitOps 1.19
