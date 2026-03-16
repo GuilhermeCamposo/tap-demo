@@ -95,14 +95,21 @@ data:
       serviceLocatorMethod:
         type: multiTenant
     permission:
-      enabled: false
+      enabled: true
+      rbac:
+        admin:
+          users:
+            - name: group:default/rhdh-admins
+        pluginsWithPermission:
+          - catalog
+          - scaffolder
+          - permission
     enabled:
       argocd: true
       github: true
       githubOrg: false
       keycloak: true
       kubernetes: true
-      permission: false
       techdocs: false
 
              

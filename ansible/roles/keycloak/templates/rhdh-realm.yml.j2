@@ -7,7 +7,6 @@ metadata:
 spec:
   keycloakCRName: keycloak
   realm:
-    id: b593d6e7-8e02-4e70-b2ab-3518e7adcfef
     realm: "{{ rhdh_keycloak_realm }}"
     displayName: Developer Hub
     notBefore: 0
@@ -332,7 +331,23 @@ spec:
             clientRole: true
             containerId: 89b0c136-b48d-4e1c-818e-3f3fd2ef4686
             attributes: {}
-    groups: []
+    groups:
+      - id: b6e0e194-d11c-4292-ae38-0056d5321cb3
+        name: rhdh-admins
+        description: Administrator for Developer Hub
+        path: /rhdh-admins
+        subGroups: []
+        attributes: {}
+        realmRoles: []
+        clientRoles: {}
+      - id: a022adeb-7d10-45b5-98e4-f94a45aa9792
+        name: rhdh-devs
+        description: Developers for Developer Hub
+        path: /rhdh-devs
+        subGroups: []
+        attributes: {}
+        realmRoles: []
+        clientRoles: {}
     defaultRole:
       id: e9a11d62-9e4e-4d7a-8ce4-564009728bb4
       name: default-roles-rhdh
@@ -394,12 +409,37 @@ spec:
         disableableCredentialTypes: []
         requiredActions: []
         notBefore: 0
+        groups: 
+          - rhdh-admins
         access:
           manageGroupMembership: true
           view: true
           mapRoles: true
           impersonate: true
-          manage: true    
+          manage: true
+      - username: dev1
+        firstName: Dev One
+        lastName: Doe
+        email: dev1@demo.com
+        emailVerified: true
+        enabled: true
+        credentials:
+          - type: password
+            userLabel: My Password
+            value: developer
+            temporary: false
+        totp: false
+        disableableCredentialTypes: []
+        requiredActions: []
+        notBefore: 0
+        groups: 
+          - rhdh-devs
+        access:
+          manageGroupMembership: true
+          view: true
+          mapRoles: true
+          impersonate: true
+          manage: true                 
       - id: 2db4cd75-47cf-4e73-8d86-48e450cdcd42
         username: service-account-rhdh
         emailVerified: true
