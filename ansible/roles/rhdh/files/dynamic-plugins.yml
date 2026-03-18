@@ -7,6 +7,10 @@ data:
     includes:
       - dynamic-plugins.default.yaml
     plugins:
+      - package: ./dynamic-plugins/dist/backstage-plugin-notifications
+        disabled: false
+      - package: ./dynamic-plugins/dist/backstage-plugin-notifications-backend-dynamic
+        disabled: false            
       - package: ./dynamic-plugins/dist/backstage-community-plugin-rbac
         disabled: false    
       - disabled: false
