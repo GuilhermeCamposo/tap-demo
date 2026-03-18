@@ -97,13 +97,8 @@ data:
     permission:
       enabled: true
       rbac:
-        admin:
-          users:
-            - name: group:default/rhdh-admins
-        pluginsWithPermission:
-          - catalog
-          - scaffolder
-          - permission
+        policies-csv-file: /opt/app-root/src/rbac-policies.csv
+        policyFileReload: true
     enabled:
       argocd: true
       github: true

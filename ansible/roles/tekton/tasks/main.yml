@@ -46,3 +46,7 @@
   retries: 20
   delay: 10
   until: r_tekton_pod.resources | list | length == 1
+
+
+# Need to automate this configuration:
+# oc patch tektonconfig config --type='json' -p='[{"op": "replace", "path":"/spec/pipeline/coschedule", "value":"disabled"}]'

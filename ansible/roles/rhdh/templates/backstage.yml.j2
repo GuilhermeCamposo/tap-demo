@@ -10,7 +10,9 @@ spec:
       configMaps:
          - name: {{ rhdh_cm_name }}
     extraFiles:
-      mountPath: /opt/app-root/src
+      mountPath: /opt/app-root/src     
+      configMaps:
+         - name: rbac-policies
     extraEnvs:
       secrets:
          - name: {{ rhdh_secret_name }}

@@ -1,0 +1,33 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: rbac-policies
+data:
+  rbac-policies.csv: |-
+    p, role:default/admin, policy.entity.read, read, allow
+    p, role:default/admin, policy.entity.create, create, allow
+    p, role:default/admin, policy.entity.delete, delete, allow
+    p, role:default/admin, policy.entity.update, update, allow
+    p, role:default/admin, catalog.entity.read, read, allow
+    p, role:default/dev, catalog.entity.read, read, allow
+    p, role:default/dev, catalog.entity.create, create, allow
+    p, role:default/dev, catalog.entity.delete, delete, allow
+    p, role:default/dev, catalog.entity.refresh, update, allow
+    p, role:default/dev, catalog.entity.validate, use, allow
+    p, role:default/dev, catalog.location.read, read, allow
+    p, role:default/dev, catalog.location.create, create, allow
+    p, role:default/dev, catalog.location.delete, delete, allow
+    p, role:default/dev, catalog.location.analyze, use, allow
+    p, role:default/dev, scaffolder.template.parameter.read, read, allow
+    p, role:default/dev, scaffolder.template.step.read, read, allow
+    p, role:default/dev, scaffolder.action.execute, use, allow
+    p, role:default/dev, scaffolder.task.cancel, use, allow
+    p, role:default/dev, scaffolder.task.create, create, allow
+    p, role:default/dev, scaffolder.task.read, read, allow
+    p, role:default/dev, scaffolder.template.management, use, allow
+    p, role:default/dev, argocd.view.read, read, allow
+    p, role:default/dev, kubernetes.resources.read, read, allow
+    p, role:default/dev, kubernetes.clusters.read, read, allow
+    p, role:default/dev, adoption-insights.events.read, read, allow
+    g, group:default/rhdh-admins, role:default/admin
+    g, group:default/rhdh-devs, role:default/dev

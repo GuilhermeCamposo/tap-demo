@@ -105,7 +105,10 @@
     validate_certs: false
     state: present
     namespace: '{{ rhdh_project }}'
-    resource_definition: "{{ lookup('file', 'dynamic-plugins.yml') }}"
+    resource_definition: "{{ lookup('file', item) }}"
+  loop:
+    - dynamic-plugins.yml
+    - rbac-cm.yml  
 
 - name: Evaluate RHDH Instance
   kubernetes.core.k8s:
