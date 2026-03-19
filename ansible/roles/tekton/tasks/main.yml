@@ -47,6 +47,33 @@
   delay: 10
   until: r_tekton_pod.resources | list | length == 1
 
+- name: Wait for Tekton Config
+  kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: operator.tekton.dev/v1alpha1
+    kind: TektonConfig
+    name: config
+  register: r_tekton_config
+  retries: 20
+  delay: 10
+  until: r_tekton_config.resources| list | length == 1
 
-# Need to automate this configuration:
-# oc patch tektonconfig config --type='json' -p='[{"op": "replace", "path":"/spec/pipeline/coschedule", "value":"disabled"}]'
+- name: Patch Tekton Config to disable co-scheduling
+  ignore_errors: false
+  when:
+    - token is defined
+    - token is not none
+    - token|trim() != ""
+  block:
+    - name: Log in as super user with token on OpenShift 4
+      ansible.builtin.command: "oc login --token={{ token }}  --server={{ server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
+      register: r_login
+      changed_when: r_login.rc != 0
+
+    - name: Patch Tekton Config
+      ansible.builtin.command: >-
+        oc patch tektonconfig config --type='json' -p='[{"op": "replace", "path":"/spec/pipeline/coschedule", "value":"disabled"}]'
+      register: r_patch
+      changed_when: r_patch.rc != 0
