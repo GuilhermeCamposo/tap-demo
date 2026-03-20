@@ -92,7 +92,7 @@
     namespace: '{{ rhdh_project }}'
     resource_definition: "{{ lookup('template', item) }}"
   loop:
-    - app-cm-oidc.yml.j2
+    - app-config.yml.j2
     - secrets-rhdh.yml.j2
 
 - name: Evaluate RHDH dynamic-plugins Configuration
