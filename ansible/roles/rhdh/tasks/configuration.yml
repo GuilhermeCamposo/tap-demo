@@ -105,7 +105,8 @@
     resource_definition: "{{ lookup('file', item) }}"
   loop:
     - dynamic-plugins.yml
-    - rbac-cm.yml  
+    - rbac-cm.yml
+    - plugins-pvc.yml  
 
 - name: Evaluate RHDH Instance
   kubernetes.core.k8s:

@@ -3,6 +3,16 @@ kind: Backstage
 metadata:
   name: developer-hub
 spec:
+  deployment:
+    patch:
+      spec:
+        template:
+          spec:
+            volumes:
+              - $patch: replace
+                name: dynamic-plugins-root
+                persistentVolumeClaim:
+                  claimName: dynamic-plugins-root
   application:
     dynamicPluginsConfigMapName: dynamic-plugins-rhdh
     appConfig:

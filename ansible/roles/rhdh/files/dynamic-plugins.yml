@@ -64,6 +64,11 @@ data:
                   - config:
                       layout:
                         gridColumn: 1 / -1
+                    importName: StarredRatingsTable
+                    mountPoint: entity.page.feedback/cards
+                  - config:
+                      layout:
+                        gridColumn: 1 / -1
                     importName: EntityFeedbackResponseContent
                     mountPoint: entity.page.feedback/cards
       - package: oci://quay.io/gcamposo/backstage-community-plugin-entity-feedback-backend:0.14.0!backstage-community-plugin-entity-feedback-backend
