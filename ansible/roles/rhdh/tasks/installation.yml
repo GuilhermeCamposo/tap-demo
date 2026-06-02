@@ -54,7 +54,7 @@
       - app.kubernetes.io/component=rhdh-operator
     field_selectors:
       - status.phase=Running
-  register: r_streams_pod
+  register: rhdh_operator_pod
   retries: 10
   delay: 20
-  until: r_streams_pod.resources | list | length == 1
+  until: rhdh_operator_pod.resources | list | length == 1

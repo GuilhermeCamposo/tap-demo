@@ -24,16 +24,16 @@
     name: openshift-gitops-cluster
     namespace: openshift-gitops
     api_version: v1
-  register: r_credential
+  register: rhdh_argo_credential
   until:
-    - r_credential.resources is defined
-    - r_credential.resources[0] is defined
+    - rhdh_argo_credential.resources is defined
+    - rhdh_argo_credential.resources[0] is defined
   retries: 10
   delay: 15
 
 - name: Set admin password
   ansible.builtin.set_fact:
-    arcocd_admin_password: "{{ r_credential.resources[0].data['admin.password'] | b64decode }}"
+    rhdh_argo_admin_password: "{{ rhdh_argo_credential.resources[0].data['admin.password'] | b64decode }}"
 
 - name: Evaluate RHDH SA
   kubernetes.core.k8s:
@@ -63,25 +63,25 @@
     resource_definition: "{{ lookup('template', 'rhdh-view-crb.yml.j2') }}"
 
 - name: Ensure OpenShift login and SA token
-  block:
-    - name: Log in as super user with token on OpenShift 4
-      ansible.builtin.command: "oc login --token={{ token }}  --server={{ server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
-      register: r_login
-      changed_when: r_login.rc != 0
-
-    - name: Generate Long Live Token for SA
-      ansible.builtin.command: "oc create token {{ rhdh_sa_name }} --duration=100000h -n {{ rhdh_project }}"
-      register: r_create_token
-      changed_when: r_create_token.rc != 0
-
-    - name: Set SA Token
-      ansible.builtin.set_fact:
-        rhdh_sa_token: "{{ r_create_token.stdout }}"
   when:
     - token is defined
     - token is not none
     - token|trim() != ""
   ignore_errors: false
+  block:
+    - name: Log in as super user with token on OpenShift 4
+      ansible.builtin.command: "oc login --token={{ token }}  --server={{ server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
+      register: rhdh_login
+      changed_when: rhdh_login.rc != 0
+
+    - name: Generate Long Live Token for SA
+      ansible.builtin.command: "oc create token {{ rhdh_sa_name }} --duration=100000h -n {{ rhdh_project }}"
+      register: rhdh_create_token
+      changed_when: rhdh_create_token.rc != 0
+
+    - name: Set SA Token
+      ansible.builtin.set_fact:
+        rhdh_sa_token: "{{ rhdh_create_token.stdout }}"
 
 - name: Evaluate RHDH Configuration
   kubernetes.core.k8s:
@@ -106,7 +106,7 @@
   loop:
     - dynamic-plugins.yml
     - rbac-cm.yml
-    - plugins-pvc.yml  
+    - plugins-pvc.yml
 
 - name: Evaluate RHDH Instance
   kubernetes.core.k8s:
