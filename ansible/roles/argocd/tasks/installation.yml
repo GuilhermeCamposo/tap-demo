@@ -53,7 +53,7 @@
       - control-plane = gitops-operator
     field_selectors:
       - status.phase=Running
-  register: r_gitops_pod
+  register: argocd_pod
   retries: 20
   delay: 10
-  until: r_gitops_pod.resources | list | length == 1
+  until: argocd_pod.resources | list | length == 1

@@ -14,11 +14,11 @@
 
 - name: Set Bucket Name
   ansible.builtin.set_fact:
-    s3_bucket_name: "trustify-{{ lookup('community.general.random_string', special=false, upper=false) }}"
+    tpa_s3_bucket_name: "trustify-{{ lookup('community.general.random_string', special=false, upper=false) }}"
 
 - name: Print Bucket Name
   ansible.builtin.debug:
-    var: s3_bucket_name
+    var: tpa_s3_bucket_name
 
 - name: Evaluate Namespace {{ tpa_project }}
   kubernetes.core.k8s:
@@ -99,10 +99,10 @@
       - statefulset.kubernetes.io/pod-name = postgresql-db-0
     field_selectors:
       - status.phase=Running
-  register: r_minio_pod
+  register: tpa_minio_pod
   retries: 20
   delay: 10
-  until: r_minio_pod.resources | list | length == 1
+  until: tpa_minio_pod.resources | list | length == 1
 
 - name: Evaluate Secrets
   kubernetes.core.k8s:

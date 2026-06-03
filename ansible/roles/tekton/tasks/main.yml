@@ -17,7 +17,7 @@
         source: redhat-operators
         sourceNamespace: openshift-marketplace
 
-- name: Wait for Tekton operator to install
+- name: Wait for Tekton CRD Installation
   kubernetes.core.k8s_info:
     api_key: '{{ token }}'
     host: '{{ server }}'
@@ -25,12 +25,12 @@
     api_version: apiextensions.k8s.io/v1
     kind: CustomResourceDefinition
     name: tasks.tekton.dev
-  register: _crd
-  until: _crd.resources | list | length == 1
+  register: tekton_crd
+  until: tekton_crd.resources | list | length == 1
   retries: 10
   delay: 30
 
-- name: Wait for Tekton operator to install
+- name: Wait for Tekton operator Installation
   kubernetes.core.k8s_info:
     api_key: '{{ token }}'
     host: '{{ server }}'
@@ -42,10 +42,10 @@
       - app = tekton-operator
     field_selectors:
       - status.phase=Running
-  register: r_tekton_pod
+  register: tekton_pod
   retries: 20
   delay: 10
-  until: r_tekton_pod.resources | list | length == 1
+  until: tekton_pod.resources | list | length == 1
 
 - name: Wait for Tekton Config
   kubernetes.core.k8s_info:
@@ -55,10 +55,10 @@
     api_version: operator.tekton.dev/v1alpha1
     kind: TektonConfig
     name: config
-  register: r_tekton_config
+  register: tekton_config
   retries: 20
   delay: 10
-  until: r_tekton_config.resources| list | length == 1
+  until: tekton_config.resources| list | length == 1
 
 - name: Patch Tekton Config to disable co-scheduling
   ignore_errors: false
@@ -69,11 +69,11 @@
   block:
     - name: Log in as super user with token on OpenShift 4
       ansible.builtin.command: "oc login --token={{ token }}  --server={{ server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
-      register: r_login
-      changed_when: r_login.rc != 0
+      register: tekton_login
+      changed_when: tekton_login.rc != 0
 
     - name: Patch Tekton Config
       ansible.builtin.command: >-
         oc patch tektonconfig config --type='json' -p='[{"op": "replace", "path":"/spec/pipeline/coschedule", "value":"disabled"}]'
-      register: r_patch
-      changed_when: r_patch.rc != 0
+      register: tekton_patch
+      changed_when: tekton_patch.rc != 0

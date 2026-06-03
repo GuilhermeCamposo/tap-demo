@@ -30,10 +30,10 @@
       - control-plane = controller-manager
     field_selectors:
       - status.phase=Running
-  register: r_acs_operator_pod
+  register: acs_operator_pod
   retries: 20
   delay: 10
-  until: r_acs_operator_pod.resources | list | length == 1
+  until: acs_operator_pod.resources | list | length == 1
 
 - name: Evaluate Namespace stackrox
   kubernetes.core.k8s:
@@ -70,12 +70,12 @@
       - app.kubernetes.io/instance = stackrox-central-services
     field_selectors:
       - status.phase=Running
-  register: r_acs_central_pod
+  register: acs_central_pod
   retries: 20
   delay: 10
   until:
-    - r_acs_central_pod.resources[0].status.containerStatuses is defined
-    - r_acs_central_pod.resources[0].status.containerStatuses[0].ready == true
+    - acs_central_pod.resources[0].status.containerStatuses is defined
+    - acs_central_pod.resources[0].status.containerStatuses[0].ready == true
 
 - name: Get collector-tls
   kubernetes.core.k8s_info:
@@ -86,10 +86,10 @@
     name: collector-tls
     namespace: stackrox
     api_version: v1
-  register: r_collector_tls
+  register: acs_collector_tls
 
 - name: Generate init-bundle
-  when: r_collector_tls.resources[0] is undefined
+  when: acs_collector_tls.resources[0] is undefined
   block:
     - name: Get htpasswd
       kubernetes.core.k8s_info:
@@ -100,32 +100,32 @@
         name: central-htpasswd
         namespace: stackrox
         api_version: v1
-      register: r_admin_password
+      register: acs_admin_password
       until:
-        - r_admin_password.resources is defined
-        - r_admin_password.resources[0] is defined
+        - acs_admin_password.resources is defined
+        - acs_admin_password.resources[0] is defined
       retries: 10
       delay: 15
     - name: Set admin password
       ansible.builtin.set_fact:
-        admin_password: '{{ r_admin_password.resources[0].data.password | b64decode }}'
+        acs_admin_password: '{{ acs_admin_password.resources[0].data.password | b64decode }}'
     - name: Create Init Bundle
       ansible.builtin.uri:
         url: https://central-stackrox.apps.{{ domain }}/v1/cluster-init/init-bundles
         validate_certs: false
         method: POST
         url_username: admin
-        url_password: "{{ admin_password }}"
+        url_password: "{{ acs_admin_password }}"
         force_basic_auth: true
         body: '{"name":"local-cluster"}'
         body_format: json
         status_code: 200,201,204
-      register: r_init_bundle
+      register: acs_init_bundle
       retries: 10
       delay: 15
     - name: Set bundle
       ansible.builtin.set_fact:
-        bundle: '{{ r_init_bundle.json.kubectlBundle | b64decode }}'
+        acs_bundle: '{{ acs_init_bundle.json.kubectlBundle | b64decode }}'
     - name: Evaluate Bundle
       kubernetes.core.k8s:
         api_key: '{{ token }}'
@@ -133,7 +133,7 @@
         validate_certs: false
         state: present
         namespace: 'stackrox'
-        resource_definition: "{{ bundle }}"
+        resource_definition: "{{ acs_bundle }}"
 
 - name: Evaluate secure-cluster
   kubernetes.core.k8s:

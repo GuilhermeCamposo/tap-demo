@@ -49,10 +49,10 @@
       - app.kubernetes.io/component = devspaces-operator
     field_selectors:
       - status.phase=Running
-  register: r_devspace_pod
+  register: devspaces_pod
   retries: 120
   delay: 10
-  until: r_devspace_pod.resources | list | length == 1
+  until: devspaces_pod.resources | list | length == 1
 
 - name: Check Devspaces namespace
   kubernetes.core.k8s:
@@ -63,11 +63,8 @@
     kind: Namespace
     name: openshift-devspaces
     state: present
-  register: _namespace
   retries: 10
   delay: 5
-  until:
-    - _namespace is succeeded
 
 - name: Check Che Cluster
   kubernetes.core.k8s:
@@ -77,10 +74,10 @@
     state: present
     namespace: openshift-devspaces
     resource_definition: "{{ lookup('file', 'devspace-cluster.yml') }}"
-  register: _che
+  register: devspaces_che
   retries: 10
   delay: 10
-  until: not _che.failed
+  until: not devspaces_che.failed
 
 - name: Wait DevSpaces Instance To Be Running
   kubernetes.core.k8s_info:
@@ -95,7 +92,7 @@
       - component = che-gateway
     field_selectors:
       - status.phase=Running
-  register: r_devspace_pod
+  register: devspaces_pod
   retries: 120
   delay: 10
-  until: r_devspace_pod.resources | list | length == 1
+  until: devspaces_pod.resources | list | length == 1
