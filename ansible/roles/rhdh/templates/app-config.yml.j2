@@ -7,9 +7,7 @@ data:
     app:
       baseUrl: https://backstage-developer-hub-{{ rhdh_project }}.{{ route_subdomain }}
     backend:
-      auth:
-        keys:
-          - secret: ${BACKEND_SECRET}      
+      auth:     
         externalAccess:
           - type: static
             options:
